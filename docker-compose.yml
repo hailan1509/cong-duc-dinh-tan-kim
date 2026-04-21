@@ -18,8 +18,10 @@ services:
   web:
     build:
       context: ./web
+    env_file:
+      - ./web/.env
     environment:
-      DATABASE_URL: mysql://root:root@db:3306/congduc
+      DATABASE_URL: mysql://root:dinhvanhai1509@180.93.2.247:3306/cong_duc_dinh_tan_kim_db
       ADMIN_PASSWORD: admin123
     depends_on:
       db:
