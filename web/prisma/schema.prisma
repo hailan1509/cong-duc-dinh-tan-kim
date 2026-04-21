@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  staff
+}
+
+enum TtsProvider {
+  webspeech
+  fpt
+}
+
+enum Honorific {
+  ong
+  ba
+  anh
+  chi
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(admin)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model AppSetting {
+  id          Int         @id @default(1)
+  ttsEnabled  Boolean     @default(false) @map("tts_enabled")
+  ttsProvider TtsProvider @default(fpt) @map("tts_provider")
+
+  // FPT.AI TTS options
+  fptVoice  String @default("banmai") @map("fpt_voice")
+  fptSpeed  Int    @default(0) @map("fpt_speed")
+  fptFormat String @default("mp3") @map("fpt_format")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+model Festival {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+  year      Int
+  active    Boolean  @default(false)
+
+  merits    Merit[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([active])
+  @@index([year, startDate])
+  @@map("festivals")
+}
+
+model Merit {
+  id           Int      @id @default(autoincrement())
+  festivalId   Int      @map("festival_id")
+  festival     Festival @relation(fields: [festivalId], references: [id], onDelete: Cascade)
+
+  honorific    Honorific @default(ong)
+  announce     Boolean   @default(true)
+  donorName    String   @map("donor_name")
+  donorAddress String   @map("donor_address")
+  amount       Int
+  note         String?  @db.Text
+
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([festivalId, createdAt])
+  @@map("merits")
+}
+

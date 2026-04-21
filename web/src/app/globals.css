@@ -1,0 +1,502 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+}
+
+/* Public "Bảng Vàng" page theme */
+body.bang-vang {
+  background: url("/background.jpg") center center fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  padding: 5px;
+  font-family: "Playfair Display", "Noto Serif TC", serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body.bang-vang::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 0, 0, 0.3) 0%,
+    rgba(220, 20, 60, 0.3) 50%,
+    rgba(255, 99, 71, 0.3) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scope all styles to the public home board */
+body.bang-vang .page-root {
+  position: relative;
+  z-index: 1;
+}
+
+body.bang-vang .container {
+  position: relative;
+  z-index: 1;
+  max-width: 2000px;
+  margin: 0 auto;
+}
+
+/* Header */
+body.bang-vang .header-wrapper {
+  text-align: center;
+  margin-bottom: 10px;
+  padding: 12px 5px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.95) 0%, rgba(255, 223, 0, 0.95) 100%);
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3);
+  border: 4px solid #8b0000;
+  position: relative;
+  overflow: hidden;
+}
+
+body.bang-vang .header-wrapper::before,
+body.bang-vang .header-wrapper::after {
+  content: "⚜";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  opacity: 0.3;
+}
+
+body.bang-vang .header-wrapper::before {
+  left: 10px;
+}
+body.bang-vang .header-wrapper::after {
+  right: 10px;
+}
+
+body.bang-vang .main-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #8b0000;
+  text-shadow: 3px 3px 0px #ffd700, 6px 6px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%,
+  100% {
+    text-shadow: 3px 3px 0px #ffd700, 6px 6px 10px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    text-shadow: 3px 3px 0px #ffd700, 6px 6px 20px rgba(255, 215, 0, 0.8);
+  }
+}
+
+body.bang-vang .subtitle {
+  font-size: 1.3rem;
+  color: #8b0000;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+body.bang-vang .header-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid rgba(139, 0, 0, 0.3);
+}
+
+body.bang-vang .header-info-item {
+  text-align: center;
+}
+
+body.bang-vang .header-info-label {
+  font-size: 0.7rem;
+  color: #b01919;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+body.bang-vang .header-info-value {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #dc143c;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  line-height: 1.2;
+}
+
+body.bang-vang .header-info-value.gold {
+  color: #b01919;
+  font-size: 1.6rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Main layout */
+body.bang-vang .main-content {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 10px;
+}
+
+body.bang-vang .main-list-section {
+  min-width: 0;
+}
+
+body.bang-vang .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 0;
+}
+
+/* Right column */
+body.bang-vang .top-donors-section {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.95) 0%, rgba(255, 223, 0, 0.95) 100%);
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3);
+  border: 3px solid #8b0000;
+  padding: 10px;
+  position: sticky;
+  top: 10px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+}
+
+body.bang-vang .top-donors-title {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #8b0000;
+  text-align: center;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 0px #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(139, 0, 0, 0.3);
+}
+
+body.bang-vang .top-donor-item {
+  background: linear-gradient(135deg, #ffffff 0%, #fff8dc 100%);
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+body.bang-vang .top-donor-item:hover {
+  transform: translateX(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.bang-vang .top-donor-item.top-1-item {
+  background: linear-gradient(135deg, #fff9e6 0%, #ffe5b4 100%);
+  border: 3px solid #ffd700;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+body.bang-vang .top-donor-item.top-2-item {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  border: 3px solid #c0c0c0;
+  box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+}
+
+body.bang-vang .top-donor-item.top-3-item {
+  background: linear-gradient(135deg, #f5e6d3 0%, #e6d4b8 100%);
+  border: 3px solid #cd7f32;
+  box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+}
+
+body.bang-vang .top-donor-rank {
+  display: inline-block;
+  background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+  color: #ffd700;
+  font-weight: 900;
+  font-size: 0.9rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 24px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+body.bang-vang .top-donor-rank.top-1 {
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  color: #8b0000;
+  font-size: 1rem;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+}
+
+body.bang-vang .top-donor-rank.top-2 {
+  background: linear-gradient(135deg, #c0c0c0 0%, #a0a0a0 100%);
+  color: #8b0000;
+}
+
+body.bang-vang .top-donor-rank.top-3 {
+  background: linear-gradient(135deg, #cd7f32 0%, #a0522d 100%);
+  color: #ffd700;
+}
+
+body.bang-vang .top-donor-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #8b0000;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.bang-vang .top-donor-amount {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #dc143c;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Cards */
+body.bang-vang .donor-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fff8dc 100%);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 5px rgba(255, 255, 255, 0.5);
+  border: 3px solid #ffd700;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  height: fit-content;
+}
+
+body.bang-vang .donor-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #8b0000, #dc143c, #ff6347, #ffd700);
+}
+
+body.bang-vang .donor-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+body.bang-vang .donor-header {
+  background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+  padding: 12px 15px;
+  text-align: center;
+  position: relative;
+}
+
+body.bang-vang .donor-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ffd700, transparent);
+}
+
+body.bang-vang .donor-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 215, 0, 0.5);
+  letter-spacing: 1px;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+body.bang-vang .donor-body {
+  padding: 12px 15px;
+}
+
+body.bang-vang .donor-info {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.5) 0%, rgba(255, 255, 255, 0.5) 100%);
+  border-radius: 8px;
+  border-left: 4px solid #ffd700;
+}
+
+body.bang-vang .donor-info-label {
+  font-size: 0.75rem;
+  color: #8b0000;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+body.bang-vang .donor-info-value {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.3;
+  height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.bang-vang .donor-amount {
+  text-align: center;
+  padding: 10px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  border-radius: 10px;
+  margin-top: 5px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+body.bang-vang .donor-amount-label {
+  font-size: 0.7rem;
+  color: #8b0000;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  letter-spacing: 1px;
+}
+
+body.bang-vang .donor-amount-value {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #8b0000;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading / error */
+body.bang-vang .loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #ffd700;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+body.bang-vang .error-message {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  border: 3px solid #dc143c;
+  color: #8b0000;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  body.bang-vang .cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  body.bang-vang .main-content {
+    grid-template-columns: 1fr 260px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1200px) {
+  body.bang-vang .main-content {
+    grid-template-columns: 1fr;
+  }
+  body.bang-vang .top-donors-section {
+    position: relative;
+    max-height: none;
+    margin-top: 10px;
+  }
+  body.bang-vang .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  body.bang-vang {
+    padding: 5px;
+  }
+  body.bang-vang .main-title {
+    font-size: 2rem;
+    letter-spacing: 2px;
+  }
+  body.bang-vang .subtitle {
+    font-size: 1.1rem;
+  }
+  body.bang-vang .header-info {
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+  body.bang-vang .header-info-label {
+    font-size: 0.65rem;
+  }
+  body.bang-vang .header-info-value {
+    font-size: 0.9rem;
+  }
+  body.bang-vang .header-info-value.gold {
+    font-size: 1.3rem;
+  }
+  body.bang-vang .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  body.bang-vang .donor-name {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body.bang-vang .header-wrapper {
+    padding: 10px 5px;
+    margin-bottom: 8px;
+  }
+  body.bang-vang .main-title {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+  }
+  body.bang-vang .subtitle {
+    font-size: 1rem;
+  }
+  body.bang-vang .header-info {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+  body.bang-vang .header-info-value {
+    font-size: 0.85rem;
+  }
+  body.bang-vang .header-info-value.gold {
+    font-size: 1.2rem;
+  }
+  body.bang-vang .cards-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+

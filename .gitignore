@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+
+web/.next
+web/node_modules
+
