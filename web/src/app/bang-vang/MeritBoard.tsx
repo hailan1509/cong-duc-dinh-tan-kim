@@ -43,30 +43,80 @@ export default function MeritBoard() {
   const speechVoiceNameRef = useRef<string | null>(null);
   const ttsProviderRef = useRef<"webspeech" | "fpt">("webspeech");
   const fptReadyRef = useRef(false);
+  const ttsQueueRef = useRef<string[]>([]);
+  const ttsRunningRef = useRef(false);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  function speak(text: string) {
-    if (!speakerEnabledRef.current) return;
-    if (ttsProviderRef.current === "fpt") {
-      void speakFpt(text);
-      return;
-    }
-    const synth = window.speechSynthesis;
-    if (!synth) return;
+  function hardStopTts() {
     try {
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "vi-VN";
-      if (speechVoiceNameRef.current) {
-        const v = synth.getVoices().find((vv) => vv.name === speechVoiceNameRef.current);
-        if (v) u.voice = v;
-      }
-      u.rate = 1;
-      u.pitch = 1;
-      u.volume = 1;
-      synth.speak(u);
+      window.speechSynthesis?.cancel();
     } catch {
       // ignore
     }
+    try {
+      const a = currentAudioRef.current;
+      if (a) {
+        a.pause();
+        a.src = "";
+      }
+    } catch {
+      // ignore
+    }
+    currentAudioRef.current = null;
+    ttsQueueRef.current = [];
+    ttsRunningRef.current = false;
+  }
+
+  function enqueueSpeak(text: string) {
+    if (!speakerEnabledRef.current) return;
+    const t = String(text || "").trim();
+    if (!t) return;
+    if (ttsQueueRef.current.length >= 10) ttsQueueRef.current.shift();
+    ttsQueueRef.current.push(t);
+    void pumpTtsQueue();
+  }
+
+  async function pumpTtsQueue() {
+    if (ttsRunningRef.current) return;
+    ttsRunningRef.current = true;
+    try {
+      while (speakerEnabledRef.current && ttsQueueRef.current.length > 0) {
+        const next = ttsQueueRef.current.shift();
+        if (!next) continue;
+        if (ttsProviderRef.current === "fpt") {
+          await speakFpt(next);
+        } else {
+          await speakWebSpeech(next);
+        }
+      }
+    } finally {
+      ttsRunningRef.current = false;
+    }
+  }
+
+  async function speakWebSpeech(text: string) {
+    if (!speakerEnabledRef.current) return;
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    await new Promise<void>((resolve) => {
+      try {
+        synth.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "vi-VN";
+        if (speechVoiceNameRef.current) {
+          const v = synth.getVoices().find((vv) => vv.name === speechVoiceNameRef.current);
+          if (v) u.voice = v;
+        }
+        u.rate = 1;
+        u.pitch = 1;
+        u.volume = 1;
+        u.onend = () => resolve();
+        u.onerror = () => resolve();
+        synth.speak(u);
+      } catch {
+        resolve();
+      }
+    });
   }
 
   async function speakFpt(text: string) {
@@ -85,12 +135,22 @@ export default function MeritBoard() {
       const url = data.url;
       const audio = new Audio();
       audio.src = url;
+      currentAudioRef.current = audio
 
       // retry a few times if not ready
       for (let i = 0; i < 10; i++) {
         try {
           // eslint-disable-next-line no-await-in-loop
           await audio.play();
+          await new Promise<void>((resolve) => {
+            const done = () => {
+              audio.removeEventListener("ended", done);
+              audio.removeEventListener("error", done);
+              resolve();
+            };
+            audio.addEventListener("ended", done);
+            audio.addEventListener("error", done);
+          });
           return;
         } catch {
           // eslint-disable-next-line no-await-in-loop
@@ -234,7 +294,7 @@ export default function MeritBoard() {
                     : payload.honorific === "chi"
                       ? "Chị"
                       : "Ông";
-              speak(`${honor} ${name} công đức ${formatCurrencyVnd(amt)}`);
+              enqueueSpeak(`${honor} ${name} công đức ${formatCurrencyVnd(amt)}`);
             }
           }
         } catch {
@@ -264,6 +324,7 @@ export default function MeritBoard() {
   // Keep refs in sync for SSE callbacks
   useEffect(() => {
     speakerEnabledRef.current = speakerEnabled;
+    if (!speakerEnabled) hardStopTts();
   }, [speakerEnabled]);
 
   useEffect(() => {
@@ -313,72 +374,39 @@ export default function MeritBoard() {
             <div className="header-info-value">{lastUpdated || "Đang tải..."}</div>
           </div>
         </div>
-        <div className="mt-3 flex justify-center">
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                const next = !speakerEnabled;
-                setSpeakerEnabled(next);
-                try {
-                  localStorage.setItem("cdtk_speaker", next ? "1" : "0");
-                } catch {
-                  // ignore
-                }
-                if (next) {
-                  // user gesture => speech allowed
-                  speak("Đã bật loa thông báo công đức");
-                }
-              }}
-              className="rounded-xl border border-red-900/20 bg-white/70 px-4 py-2 text-sm font-semibold text-red-900 hover:bg-white"
-            >
-              {speakerEnabled ? "Tắt loa" : "Bật loa"}
-            </button>
-            <button
-              type="button"
-              onClick={() => speak("Xin chào. Đây là thử loa công đức.")}
-              disabled={!speakerEnabled || !speechReady}
-              className="rounded-xl border border-red-900/20 bg-white/70 px-4 py-2 text-sm font-semibold text-red-900 hover:bg-white disabled:opacity-60"
-              title={!speechReady ? "Trình duyệt đang tải giọng đọc..." : undefined}
-            >
-              Thử loa
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-red-900">
-          <span className="rounded-full bg-white/70 px-3 py-1">
-            TTS: <span className="font-semibold">{ttsProvider === "fpt" ? "FPT.AI" : "WebSpeech"}</span>
-          </span>
-          <span className="rounded-full bg-white/70 px-3 py-1">
-            Voice: <span className="font-semibold">{speechVoiceName ?? "chưa có"}</span>
-          </span>
-          <span className="rounded-full bg-white/70 px-3 py-1">
-            Tiếng Việt: <span className="font-semibold">{hasVietnameseVoice ? "có" : "không"}</span>
-          </span>
-          {availableVoices.length > 0 ? (
-            <label className="flex items-center gap-2 rounded-full bg-white/70 px-3 py-1">
-              <span>Chọn</span>
-              <select
-                className="rounded-md border bg-white px-2 py-0.5"
-                value={speechVoiceName ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value || null;
-                  setSpeechVoiceName(v);
-                  speechVoiceNameRef.current = v;
-                }}
-                disabled={!speakerEnabled}
-              >
-                {availableVoices.map((v) => (
-                  <option key={v.name} value={v.name}>
-                    {v.name} ({v.lang || "?"})
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-        </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() => enqueueSpeak("Xin chào. Đây là thử loa công đức.")}
+        disabled={!speakerEnabled || !speechReady}
+        className="fixed bottom-4 right-28 z-50 rounded-full border border-red-900/20 bg-white/90 px-4 py-2 text-xs font-semibold text-red-900 shadow-lg backdrop-blur hover:bg-white disabled:opacity-60"
+        title={!speechReady ? "Trình duyệt đang tải giọng đọc..." : speakerEnabled ? "Thử loa" : "Hãy bật loa trước"}
+      >
+        Thử loa
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          const next = !speakerEnabled;
+          setSpeakerEnabled(next);
+          try {
+            localStorage.setItem("cdtk_speaker", next ? "1" : "0");
+          } catch {
+            // ignore
+          }
+          if (next) {
+            // user gesture => speech allowed
+            enqueueSpeak("Đã bật loa thông báo công đức");
+          }
+        }}
+        className="fixed bottom-4 right-4 z-50 rounded-full border border-red-900/20 bg-white/90 px-5 py-3 text-sm font-semibold text-red-900 shadow-lg backdrop-blur hover:bg-white"
+        aria-pressed={speakerEnabled}
+        title={speakerEnabled ? "Tắt loa" : "Bật loa"}
+      >
+        {speakerEnabled ? "Tắt loa" : "Bật loa"}
+      </button>
 
       <div className="main-content">
         <div className="main-list-section">
