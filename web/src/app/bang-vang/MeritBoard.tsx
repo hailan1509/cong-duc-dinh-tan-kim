@@ -30,7 +30,7 @@ export default function MeritBoard() {
   const [merits, setMerits] = useState<Merit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [toast, setToast] = useState<null | { title: string; detail?: string }>(null);
+  const [toasts, setToasts] = useState<Array<{ id: string; title: string; detail?: string }>>([]);
   const [speakerEnabled, setSpeakerEnabled] = useState(false);
   const [speechReady, setSpeechReady] = useState(false);
   const [speechVoiceName, setSpeechVoiceName] = useState<string | null>(null);
@@ -257,7 +257,7 @@ export default function MeritBoard() {
 
     load();
     let es: EventSource | null = null;
-    let toastTimer: number | null = null;
+    const timers = new Map<string, number>();
 
     try {
       es = new EventSource("/api/public/stream");
@@ -270,15 +270,22 @@ export default function MeritBoard() {
             honorific?: "ong" | "ba" | "anh" | "chi";
             announce?: boolean;
           };
-          setToast({
-            title: "Có công đức mới",
-            detail:
-              payload?.donorName && payload?.amount != null
-                ? `${payload.donorName} • ${formatCurrencyVnd(Number(payload.amount) || 0)}`
-                : undefined,
-          });
-          if (toastTimer) window.clearTimeout(toastTimer);
-          toastTimer = window.setTimeout(() => setToast(null), 4000);
+          const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+          const title = "Có công đức mới";
+          const detail =
+            payload?.donorName && payload?.amount != null
+              ? `${payload.donorName} • ${formatCurrencyVnd(Number(payload.amount) || 0)}`
+              : undefined;
+          setToasts((prev) => [{ id, title, detail }, ...prev].slice(0, 5));
+          timers.set(
+            id,
+            window.setTimeout(() => {
+              setToasts((prev) => prev.filter((t) => t.id !== id));
+              const timer = timers.get(id);
+              if (timer) window.clearTimeout(timer);
+              timers.delete(id);
+            }, 5000)
+          );
 
           if (payload?.donorName && payload?.amount != null && payload.announce !== false) {
             const name = String(payload.donorName).trim();
@@ -298,17 +305,33 @@ export default function MeritBoard() {
             }
           }
         } catch {
-          setToast({ title: "Có công đức mới" });
-          if (toastTimer) window.clearTimeout(toastTimer);
-          toastTimer = window.setTimeout(() => setToast(null), 4000);
+          const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+          setToasts((prev) => [{ id, title: "Có công đức mới" }, ...prev].slice(0, 5));
+          timers.set(
+            id,
+            window.setTimeout(() => {
+              setToasts((prev) => prev.filter((t) => t.id !== id));
+              const timer = timers.get(id);
+              if (timer) window.clearTimeout(timer);
+              timers.delete(id);
+            }, 5000)
+          );
         }
         await load();
       });
       es.onerror = () => {
         // Fallback: keep UI working, but avoid spamming
-        setToast({ title: "Mất kết nối realtime, sẽ tự cập nhật lại" });
-        if (toastTimer) window.clearTimeout(toastTimer);
-        toastTimer = window.setTimeout(() => setToast(null), 4000);
+        const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        setToasts((prev) => [{ id, title: "Mất kết nối realtime, sẽ tự cập nhật lại" }, ...prev].slice(0, 3));
+        timers.set(
+          id,
+          window.setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== id));
+            const timer = timers.get(id);
+            if (timer) window.clearTimeout(timer);
+            timers.delete(id);
+          }, 5000)
+        );
       };
     } catch {
       // ignore
@@ -316,7 +339,8 @@ export default function MeritBoard() {
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
-      if (toastTimer) window.clearTimeout(toastTimer);
+      for (const timer of timers.values()) window.clearTimeout(timer);
+      timers.clear();
       if (es) es.close();
     };
   }, []);
@@ -355,10 +379,28 @@ export default function MeritBoard() {
 
   return (
     <div className="container">
-      {toast ? (
-        <div className="fixed left-1/2 top-3 z-50 w-[min(520px,calc(100%-16px))] -translate-x-1/2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-lg">
-          <div className="font-semibold">{toast.title}</div>
-          {toast.detail ? <div className="mt-0.5 text-amber-800">{toast.detail}</div> : null}
+      {toasts.length > 0 ? (
+        <div className="fixed bottom-3 right-3 z-50 w-[min(420px,calc(100%-24px))] space-y-2">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-lg"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-semibold">{t.title}</div>
+                  {t.detail ? <div className="mt-0.5 truncate text-amber-800">{t.detail}</div> : null}
+                </div>
+                <button
+                  className="shrink-0 rounded-md px-2 py-1 text-xs text-amber-900/70 hover:bg-amber-100"
+                  onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
+                  type="button"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
       <div className="header-wrapper">
