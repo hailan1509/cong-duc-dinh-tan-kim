@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
 const MeritCreateSchema = z.object({
   festivalId: z.coerce.number().int().positive(),
-  honorific: z.enum(["ong", "ba", "anh", "chi"]).optional(),
+  honorific: z.enum(["none", "ong", "ba", "anh", "chi"]).optional(),
   announce: z.coerce.boolean().optional(),
   donorName: z.string().min(1),
   donorAddress: z.string().min(1),
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const merit = await prisma.merit.create({
     data: {
       festivalId,
-      honorific: honorific ?? "ong",
+      honorific: honorific ?? "none",
       announce: announce ?? true,
       donorName,
       donorAddress,

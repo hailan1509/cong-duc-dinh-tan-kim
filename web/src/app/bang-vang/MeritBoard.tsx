@@ -267,7 +267,7 @@ export default function MeritBoard() {
             donorName?: string;
             donorAddress?: string;
             amount?: number;
-            honorific?: "ong" | "ba" | "anh" | "chi";
+            honorific?: "none" | "ong" | "ba" | "anh" | "chi";
             announce?: boolean;
           };
           const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -294,14 +294,16 @@ export default function MeritBoard() {
               // In case admin just changed settings, refresh once before speaking
               if (ttsProviderRef.current !== "fpt") await refreshTtsConfig();
               const honor =
-                payload.honorific === "ba"
-                  ? "Bà"
-                  : payload.honorific === "anh"
-                    ? "Anh"
-                    : payload.honorific === "chi"
-                      ? "Chị"
-                      : "Ông";
-              enqueueSpeak(`${honor} ${name} công đức ${formatCurrencyVnd(amt)}`);
+                payload.honorific === "none"
+                  ? ""
+                  : payload.honorific === "ba"
+                    ? "Bà"
+                    : payload.honorific === "anh"
+                      ? "Anh"
+                      : payload.honorific === "chi"
+                        ? "Chị"
+                        : "Ông";
+              enqueueSpeak(`${honor ? `${honor} ` : ""}${name} công đức ${formatCurrencyVnd(amt)}`);
             }
           }
         } catch {

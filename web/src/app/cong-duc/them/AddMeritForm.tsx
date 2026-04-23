@@ -85,7 +85,7 @@ function numberToVietnameseWords(n: number) {
 
 export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
   const [festivalId, setFestivalId] = useState<number>(festivals[0]?.id ?? 0);
-  const [honorific, setHonorific] = useState<"ong" | "ba" | "anh" | "chi">("ong");
+  const [honorific, setHonorific] = useState<"none" | "ong" | "ba" | "anh" | "chi">("none");
   const [announce, setAnnounce] = useState(true);
   const [donorName, setDonorName] = useState("");
   const [donorAddress, setDonorAddress] = useState("");
@@ -199,20 +199,66 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">Danh xưng</div>
-          <select
-            value={honorific}
-            onChange={(e) => setHonorific(e.target.value as "ong" | "ba" | "anh" | "chi")}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-            disabled={saving}
-          >
-            <option value="ong">Ông</option>
-            <option value="ba">Bà</option>
-            <option value="anh">Anh</option>
-            <option value="chi">Chị</option>
-          </select>
-        </label>
+        <fieldset className="block">
+          <legend className="text-xs font-medium text-slate-700">Danh xưng</legend>
+          <div className="mt-2 flex flex-wrap gap-4 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="honorific"
+                value="none"
+                checked={honorific === "none"}
+                onChange={() => setHonorific("none")}
+                disabled={saving}
+              />
+              <span>Không</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="honorific"
+                value="ong"
+                checked={honorific === "ong"}
+                onChange={() => setHonorific("ong")}
+                disabled={saving}
+              />
+              <span>Ông</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="honorific"
+                value="ba"
+                checked={honorific === "ba"}
+                onChange={() => setHonorific("ba")}
+                disabled={saving}
+              />
+              <span>Bà</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="honorific"
+                value="anh"
+                checked={honorific === "anh"}
+                onChange={() => setHonorific("anh")}
+                disabled={saving}
+              />
+              <span>Anh</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="honorific"
+                value="chi"
+                checked={honorific === "chi"}
+                onChange={() => setHonorific("chi")}
+                disabled={saving}
+              />
+              <span>Chị</span>
+            </label>
+          </div>
+        </fieldset>
 
         <label className="flex items-center gap-2">
           <input

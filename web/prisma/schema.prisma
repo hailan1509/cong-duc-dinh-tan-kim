@@ -19,6 +19,7 @@ enum TtsProvider {
 }
 
 enum Honorific {
+  none
   ong
   ba
   anh
@@ -75,7 +76,7 @@ model Merit {
   festivalId   Int      @map("festival_id")
   festival     Festival @relation(fields: [festivalId], references: [id], onDelete: Cascade)
 
-  honorific    Honorific @default(ong)
+  honorific    Honorific @default(none)
   announce     Boolean   @default(true)
   donorName    String   @map("donor_name")
   donorAddress String   @map("donor_address")
