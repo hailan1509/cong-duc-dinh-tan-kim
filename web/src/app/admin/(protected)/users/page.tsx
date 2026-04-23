@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { prisma } from "@/lib/db";
-import AdminLogoutButton from "../AdminLogoutButton";
-import UsersTable from "./table";
+import UsersTable from "@/app/admin/users/table";
 
 export const dynamic = "force-dynamic";
 
@@ -18,15 +16,6 @@ export default async function AdminUsersPage() {
           <div>
             <div className="text-lg font-semibold">Quản lý user</div>
             <div className="text-sm text-slate-600">Tạo user, reset mật khẩu, xoá user</div>
-          </div>
-          <div className="flex gap-2">
-            <AdminLogoutButton />
-            <Link className="rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50" href="/admin/cong-duc">
-              Quản trị công đức
-            </Link>
-            <Link className="rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50" href="/admin/ngay-le">
-              Ngày lễ
-            </Link>
           </div>
         </div>
       </div>

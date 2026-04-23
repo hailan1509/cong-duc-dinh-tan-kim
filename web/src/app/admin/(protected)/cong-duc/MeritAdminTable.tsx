@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatVnd } from "@/lib/format";
 
 type MeritRow = {
@@ -13,7 +13,7 @@ type MeritRow = {
   festival: { id: number; name: string; year: number };
 };
 
-export default function MeritAdminTable({ initial }: { initial: MeritRow[] }) {
+export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRow[]; canEdit: boolean }) {
   const [rows, setRows] = useState(initial);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -22,6 +22,18 @@ export default function MeritAdminTable({ initial }: { initial: MeritRow[] }) {
   const [editNote, setEditNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // When server-provided data changes (filters/pagination), refresh the table.
+  useEffect(() => {
+    setRows(initial);
+    setDeleting(null);
+    setEditingId(null);
+    setEditName("");
+    setEditAddress("");
+    setEditNote("");
+    setSaving(false);
+    setError(null);
+  }, [initial]);
 
   const total = useMemo(() => rows.reduce((sum, r) => sum + r.amount, 0), [rows]);
 
@@ -84,11 +96,10 @@ export default function MeritAdminTable({ initial }: { initial: MeritRow[] }) {
         <div className="text-sm text-slate-600">
           Tổng (theo danh sách đang hiển thị): <span className="font-semibold text-slate-900">{formatVnd(total)}</span>
         </div>
+        {!canEdit ? <div className="text-xs font-semibold text-slate-500">Tài khoản staff: chỉ xem</div> : null}
       </div>
 
-      {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
-      ) : null}
+      {error ? <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
 
       <div className="overflow-hidden rounded-xl border bg-white">
         <table className="w-full text-left text-sm">
@@ -118,74 +129,48 @@ export default function MeritAdminTable({ initial }: { initial: MeritRow[] }) {
                     <div className="text-xs text-slate-600">{r.festival.year}</div>
                   </td>
                   <td className="px-4 py-3 font-medium">
-                    {editingId === r.id ? (
-                      <input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="w-full rounded-md border px-2 py-1 text-sm"
-                      />
+                    {canEdit && editingId === r.id ? (
+                      <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full rounded-md border px-2 py-1 text-sm" />
                     ) : (
                       r.donorName
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {editingId === r.id ? (
-                      <input
-                        value={editAddress}
-                        onChange={(e) => setEditAddress(e.target.value)}
-                        className="w-full rounded-md border px-2 py-1 text-sm"
-                      />
+                    {canEdit && editingId === r.id ? (
+                      <input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="w-full rounded-md border px-2 py-1 text-sm" />
                     ) : (
                       r.donorAddress
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-semibold">{formatVnd(r.amount)}</td>
                   <td className="px-4 py-3 text-slate-700">
-                    {editingId === r.id ? (
-                      <input
-                        value={editNote}
-                        onChange={(e) => setEditNote(e.target.value)}
-                        className="w-full rounded-md border px-2 py-1 text-sm"
-                      />
+                    {canEdit && editingId === r.id ? (
+                      <input value={editNote} onChange={(e) => setEditNote(e.target.value)} className="w-full rounded-md border px-2 py-1 text-sm" />
                     ) : (
                       r.note ?? ""
                     )}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{new Date(r.createdAt).toLocaleString("vi-VN")}</td>
                   <td className="px-4 py-3 text-right">
-                    {editingId === r.id ? (
+                    {canEdit && editingId === r.id ? (
                       <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => saveEdit(r.id)}
-                          disabled={saving}
-                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
-                        >
+                        <button onClick={() => saveEdit(r.id)} disabled={saving} className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60">
                           {saving ? "Đang lưu..." : "Lưu"}
                         </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50"
-                        >
+                        <button onClick={cancelEdit} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">
                           Huỷ
                         </button>
                       </div>
-                    ) : (
+                    ) : canEdit ? (
                       <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => startEdit(r)}
-                          className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50"
-                        >
+                        <button onClick={() => startEdit(r)} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">
                           Sửa
                         </button>
-                        <button
-                          onClick={() => onDelete(r.id)}
-                          disabled={deleting === r.id}
-                          className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-60"
-                        >
+                        <button onClick={() => onDelete(r.id)} disabled={deleting === r.id} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-60">
                           {deleting === r.id ? "Đang xoá..." : "Xoá"}
                         </button>
                       </div>
-                    )}
+                    ) : null}
                   </td>
                 </tr>
               ))

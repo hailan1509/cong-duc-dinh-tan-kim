@@ -20,7 +20,7 @@ export default function AdminLogoutButton() {
     <button
       onClick={onLogout}
       disabled={loading}
-      className="rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+      className="whitespace-nowrap rounded-xl border border-[#8b0000]/15 bg-white/70 px-3 py-2 text-sm font-extrabold text-[#8b0000] shadow-sm hover:bg-white disabled:opacity-60"
     >
       {loading ? "Đang đăng xuất..." : "Đăng xuất"}
     </button>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import AddFestivalForm from "../AddFestivalForm";
+import AddFestivalForm from "@/app/admin/ngay-le/AddFestivalForm";
 
 export default function AddFestivalPage() {
   return (

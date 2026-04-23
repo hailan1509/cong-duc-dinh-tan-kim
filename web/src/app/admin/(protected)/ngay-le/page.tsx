@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import AdminLogoutButton from "../AdminLogoutButton";
-import FestivalAdminTable from "./table";
+import FestivalAdminTable from "@/app/admin/ngay-le/table";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +19,6 @@ export default async function AdminFestivalsPage() {
             <div className="text-sm text-slate-600">Tạo ngày lễ để gắn công đức</div>
           </div>
           <div className="flex gap-2">
-            <AdminLogoutButton />
-            <Link className="rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50" href="/admin/cong-duc">
-              Quản trị công đức
-            </Link>
             <Link className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800" href="/admin/ngay-le/them">
               Thêm ngày lễ
             </Link>

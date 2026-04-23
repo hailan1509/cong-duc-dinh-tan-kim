@@ -1,7 +1,17 @@
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { cookies } from "next/headers";
+import { getAdminCookieName, verifyAdminToken } from "@/lib/adminSession";
+
+async function requireAdmin() {
+  const token = (await cookies()).get(getAdminCookieName())?.value;
+  const session = await verifyAdminToken(token);
+  if (!session.ok || session.role !== "admin") return false;
+  return true;
+}
 
 export async function DELETE(_: Request, ctx: { params: Promise<{ id: string }> }) {
+  if (!(await requireAdmin())) return Response.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
   const meritId = Number(id);
   if (!Number.isFinite(meritId)) return Response.json({ error: "Invalid id" }, { status: 400 });
@@ -19,6 +29,7 @@ const MeritUpdateSchema = z.object({
 });
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  if (!(await requireAdmin())) return Response.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await ctx.params;
   const meritId = Number(id);
   if (!Number.isFinite(meritId)) return Response.json({ error: "Invalid id" }, { status: 400 });

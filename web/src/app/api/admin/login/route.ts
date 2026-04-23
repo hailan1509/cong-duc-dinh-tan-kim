@@ -19,7 +19,6 @@ export async function POST(req: Request) {
 
   const ok = await bcrypt.compare(parsed.data.password, user.passwordHash);
   if (!ok) return Response.json({ error: "Sai tài khoản hoặc mật khẩu" }, { status: 401 });
-  if (user.role !== "admin") return Response.json({ error: "Không có quyền admin" }, { status: 403 });
 
   const token = await createAdminToken({ userId: user.id, role: user.role });
   const res = Response.json({ ok: true });

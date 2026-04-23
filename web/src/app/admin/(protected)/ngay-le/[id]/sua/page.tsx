@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import FestivalForm from "../../FestivalForm";
+import FestivalForm from "@/app/admin/ngay-le/FestivalForm";
 import { yyyyMmDd } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +32,7 @@ export default async function EditFestivalPage(props: { params: Promise<{ id: st
           <div>
             <div className="text-lg font-semibold">Sửa ngày lễ công đức</div>
             <div className="text-sm text-slate-600">
-              {festival.name} ({yyyyMmDd(festival.startDate)} → {yyyyMmDd(festival.endDate)}) -{" "}
-              {festival.year}
+              {festival.name} ({yyyyMmDd(festival.startDate)} → {yyyyMmDd(festival.endDate)}) - {festival.year}
             </div>
           </div>
           <Link className="rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50" href="/admin/ngay-le">
