@@ -41,7 +41,7 @@ function LoginInner() {
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_10%_0%,rgba(255,215,0,0.40),transparent_60%),radial-gradient(circle_at_110%_90%,rgba(220,20,60,0.35),transparent_60%)]" />
         <div className="pointer-events-none absolute inset-0 -z-10 bg-black/5" />
 
-        <div className="mx-auto flex min-h-full max-w-md items-center justify-center">
+        <div className="mx-auto flex min-h-full max-w-2xl items-center justify-center">
           <div className="w-full">
             <div className="mx-auto mb-6 max-w-2xl text-center">
               <div className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-slate-950 md:text-4xl">
