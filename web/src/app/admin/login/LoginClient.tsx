@@ -57,12 +57,9 @@ function LoginInner() {
             </div>
 
             <div className="mx-auto max-w-md rounded-2xl border-2 border-[#8b0000]/25 bg-gradient-to-b from-[#fff7e6]/90 to-white/90 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.22)] backdrop-blur md:p-6">
-              <div className="mb-4">
-                <div className="text-lg font-extrabold text-[#8b0000]">Đăng nhập hệ thống</div>
-              </div>
-
               <form onSubmit={onSubmit} className="space-y-3">
                 <label className="block">
+                  <div className="text-xs font-semibold text-slate-700">Tài khoản</div>
                   <input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
