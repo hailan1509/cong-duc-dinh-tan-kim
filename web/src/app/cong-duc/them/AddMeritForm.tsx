@@ -100,6 +100,13 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
   }>(null);
   const [saving, setSaving] = useState(false);
 
+  function titleCaseAfterSpaces(input: string) {
+    // Uppercase the first letter and any letter right after whitespace.
+    return String(input || "").replace(/(^|\s)(\p{L})/gu, (_, ws: string, ch: string) => {
+      return `${ws}${ch.toLocaleUpperCase("vi-VN")}`;
+    });
+  }
+
   const amount = useMemo(() => {
     if (!amountText) return 0;
     const n = Number.parseInt(amountText, 10);
@@ -164,7 +171,7 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
         <div className="text-xs font-semibold text-slate-700">Tên người công đức</div>
         <input
           value={donorName}
-          onChange={(e) => setDonorName(e.target.value)}
+          onChange={(e) => setDonorName(titleCaseAfterSpaces(e.target.value))}
           className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-[#8b0000]/50 focus:shadow-[0_0_0_4px_rgba(255,215,0,0.20)]"
           required
           disabled={saving}

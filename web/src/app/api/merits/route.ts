@@ -2,6 +2,12 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { publish } from "@/lib/sseBus";
 
+function normalizeAddress(address: string) {
+  // Replace token "tdp" (any case) with "Tổ dân phố" while preserving trailing characters.
+  // Examples: "TDP 5" -> "Tổ dân phố 5", "tdp-5" -> "Tổ dân phố-5", "tdp.5" -> "Tổ dân phố.5"
+  return address.replace(/(^|[\s,;:/\-.(\[])tdp(?=[\s0-9,;:/\-.)\]]|$)/gi, "$1Tổ dân phố");
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const festivalId = url.searchParams.get("festivalId");
@@ -39,7 +45,7 @@ export async function POST(req: Request) {
       honorific: honorific ?? "none",
       announce: announce ?? true,
       donorName,
-      donorAddress,
+      donorAddress: normalizeAddress(donorAddress),
       amount,
       note: note || null,
     },

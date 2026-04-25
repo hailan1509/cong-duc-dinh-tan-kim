@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatVnd } from "@/lib/format";
 
 type MeritRow = {
@@ -14,11 +15,13 @@ type MeritRow = {
 };
 
 export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRow[]; canEdit: boolean }) {
+  const router = useRouter();
   const [rows, setRows] = useState(initial);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editAddress, setEditAddress] = useState("");
+  const [editAmount, setEditAmount] = useState<string>("");
   const [editNote, setEditNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +33,7 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
     setEditingId(null);
     setEditName("");
     setEditAddress("");
+    setEditAmount("");
     setEditNote("");
     setSaving(false);
     setError(null);
@@ -42,6 +46,7 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
     setEditingId(row.id);
     setEditName(row.donorName);
     setEditAddress(row.donorAddress);
+    setEditAmount(String(row.amount));
     setEditNote(row.note ?? "");
   }
 
@@ -49,12 +54,18 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
     setEditingId(null);
     setEditName("");
     setEditAddress("");
+    setEditAmount("");
     setEditNote("");
     setSaving(false);
   }
 
   async function saveEdit(id: number) {
     if (saving) return;
+    const amountNum = Number(editAmount);
+    if (!Number.isFinite(amountNum) || amountNum < 0 || !Number.isInteger(amountNum)) {
+      setError("Số tiền không hợp lệ (phải là số nguyên >= 0)");
+      return;
+    }
     setSaving(true);
     setError(null);
     const res = await fetch(`/api/merits/${id}`, {
@@ -63,6 +74,7 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
       body: JSON.stringify({
         donorName: editName,
         donorAddress: editAddress,
+        amount: amountNum,
         note: editNote.trim() ? editNote : null,
       }),
     });
@@ -74,7 +86,15 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
     }
     setRows((prev) =>
       prev.map((r) =>
-        r.id === id ? { ...r, donorName: editName, donorAddress: editAddress, note: editNote.trim() ? editNote : null } : r
+        r.id === id
+          ? {
+              ...r,
+              donorName: editName,
+              donorAddress: editAddress,
+              amount: amountNum,
+              note: editNote.trim() ? editNote : null,
+            }
+          : r
       )
     );
     setSaving(false);
@@ -85,9 +105,19 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
     if (deleting) return;
     if (!confirm("Xoá công đức này?")) return;
     setDeleting(id);
+    setError(null);
     const res = await fetch(`/api/merits/${id}`, { method: "DELETE" });
-    if (res.ok) setRows((prev) => prev.filter((r) => r.id !== id));
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setError(data?.error ?? "Xoá thất bại");
+      setDeleting(null);
+      return;
+    }
+
+    // Update the visible table immediately, then refresh server data (totals/pagination).
+    setRows((prev) => prev.filter((r) => r.id !== id));
     setDeleting(null);
+    router.refresh();
   }
 
   return (
@@ -142,7 +172,18 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
                       r.donorAddress
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold">{formatVnd(r.amount)}</td>
+                  <td className="px-4 py-3 text-right font-semibold">
+                    {canEdit && editingId === r.id ? (
+                      <input
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        inputMode="numeric"
+                        className="w-32 rounded-md border px-2 py-1 text-right text-sm"
+                      />
+                    ) : (
+                      formatVnd(r.amount)
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-slate-700">
                     {canEdit && editingId === r.id ? (
                       <input value={editNote} onChange={(e) => setEditNote(e.target.value)} className="w-full rounded-md border px-2 py-1 text-sm" />

@@ -25,6 +25,11 @@ function formatCurrencyVnd(amount: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 }
 
+function normalizeAddressDisplay(address: string) {
+  // Display-only normalization: replace "tdp" token (any case) with "Tổ dân phố".
+  return String(address || "").replace(/(^|[\s,;:/\-.(\[])tdp(?=[\s0-9,;:/\-.)\]]|$)/gi, "$1Tổ dân phố");
+}
+
 export default function MeritBoard() {
   const [festival, setFestival] = useState<Festival | null>(null);
   const [merits, setMerits] = useState<Merit[]>([]);
@@ -473,7 +478,7 @@ export default function MeritBoard() {
                   <div className="donor-body">
                     <div className="donor-info">
                       <div className="donor-info-label">Địa chỉ</div>
-                      <div className="donor-info-value">{row.donorAddress}</div>
+                      <div className="donor-info-value">{normalizeAddressDisplay(row.donorAddress)}</div>
                     </div>
                     <div className="donor-amount">
                       <div className="donor-amount-label">Số tiền công đức</div>
