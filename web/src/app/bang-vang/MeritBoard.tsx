@@ -308,7 +308,7 @@ export default function MeritBoard() {
                       : payload.honorific === "chi"
                         ? "Chị"
                         : "Ông";
-              enqueueSpeak(`${honor ? `${honor} ` : ""}${name} công đức ${formatCurrencyVnd(amt)}`);
+              enqueueSpeak(`${honor ? `${honor} ` : ""}${name} phát tâm công đức ${formatCurrencyVnd(amt)} đồng`);
             }
           }
         } catch {
