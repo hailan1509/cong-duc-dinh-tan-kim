@@ -131,8 +131,9 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
 
       {error ? <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
 
-      <div className="overflow-hidden rounded-xl border bg-white">
-        <table className="w-full text-left text-sm">
+      <div className="rounded-xl border bg-white">
+        <div className="overflow-x-auto">
+          <table className="min-w-[860px] w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
             <tr>
               <th className="px-4 py-3">Ngày lễ</th>
@@ -217,7 +218,8 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
               ))
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );
