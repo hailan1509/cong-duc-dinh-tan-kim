@@ -4,6 +4,11 @@ import type { NextRequest } from "next/server";
 import { getAdminCookieName, verifyAdminToken } from "@/lib/adminSession";
 
 export function middleware(req: NextRequest) {
+  // This app has no Server Actions — reject any request probing for them
+  if (req.headers.has("next-action")) {
+    return new NextResponse(null, { status: 400 });
+  }
+
   const { pathname } = req.nextUrl;
   const isApi = pathname.startsWith("/api");
 
