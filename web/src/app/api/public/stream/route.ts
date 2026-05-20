@@ -11,38 +11,48 @@ export async function GET(req: Request) {
   const encoder = new TextEncoder();
 
   let closed = false;
+  let unsubscribeFn: (() => void) | undefined;
+  let keepAliveTimer: ReturnType<typeof setInterval> | undefined;
+
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      // Initial ping so client knows it is connected
-      controller.enqueue(encoder.encode(`: connected ${Date.now()}\n\n`));
-
-      const unsubscribe = subscribe((evt) => {
-        if (closed) return;
-        controller.enqueue(encoder.encode(sseFormat(evt)));
-      });
-
-      const keepAlive = setInterval(() => {
-        if (closed) return;
-        controller.enqueue(encoder.encode(`: keep-alive ${Date.now()}\n\n`));
-      }, 15000);
-
       const abort = () => {
         if (closed) return;
         closed = true;
-        clearInterval(keepAlive);
-        unsubscribe();
+        clearInterval(keepAliveTimer);
+        unsubscribeFn?.();
         try {
           controller.close();
         } catch {
-          // ignore
+          // ignore — already closed
         }
       };
 
-      // Close when client disconnects
+      const safeEnqueue = (chunk: Uint8Array) => {
+        if (closed) return;
+        try {
+          controller.enqueue(chunk);
+        } catch {
+          abort();
+        }
+      };
+
+      safeEnqueue(encoder.encode(`: connected ${Date.now()}\n\n`));
+
+      unsubscribeFn = subscribe((evt) => {
+        safeEnqueue(encoder.encode(sseFormat(evt)));
+      });
+
+      keepAliveTimer = setInterval(() => {
+        safeEnqueue(encoder.encode(`: keep-alive ${Date.now()}\n\n`));
+      }, 15000);
+
       req.signal.addEventListener("abort", abort);
     },
     cancel() {
       closed = true;
+      clearInterval(keepAliveTimer);
+      unsubscribeFn?.();
     },
   });
 
@@ -51,9 +61,7 @@ export async function GET(req: Request) {
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
-      // Helps if behind proxies
       "X-Accel-Buffering": "no",
     },
   });
 }
-
