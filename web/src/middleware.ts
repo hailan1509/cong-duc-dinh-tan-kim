@@ -14,11 +14,17 @@ export function middleware(req: NextRequest) {
 
   // Public paths
   if (pathname === "/") return NextResponse.next();
+  // Public income/expense transparency page (can be switched off in the ledger settings)
+  if (pathname === "/thu-chi") return NextResponse.next();
   if (pathname.startsWith("/api/public/")) return NextResponse.next();
 
   // Let Next handle static files and internals
   if (pathname.startsWith("/_next/")) return NextResponse.next();
   if (pathname === "/favicon.ico") return NextResponse.next();
+  // Public assets from /public (e.g. /background.jpg used by the public board)
+  if (!isApi && /\.(?:jpe?g|png|gif|webp|avif|svg|ico|mp3|wav|woff2?|ttf|css|js|txt)$/i.test(pathname)) {
+    return NextResponse.next();
+  }
 
   if (pathname === "/admin/login") return NextResponse.next();
   if (pathname === "/admin/forbidden") return NextResponse.next();

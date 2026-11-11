@@ -92,3 +92,10 @@ export async function verifyAdminToken(token: string | undefined | null) {
   }
 }
 
+
+/** "; Secure" when the request reached us over HTTPS (directly or via a proxy), else "". */
+export function secureCookieAttr(req: Request) {
+  const forwarded = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  const https = forwarded ? forwarded === "https" : new URL(req.url).protocol === "https:";
+  return https ? "; Secure" : "";
+}

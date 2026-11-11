@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { ButtonLink, PageHeader } from "@/components/admin/ui";
+import { IconPlus } from "@/components/admin/icons";
 import { prisma } from "@/lib/db";
 import FestivalAdminTable from "@/app/admin/ngay-le/table";
 
@@ -11,20 +12,17 @@ export default async function AdminFestivalsPage() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border bg-white p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-lg font-semibold">Quản lý ngày lễ công đức</div>
-            <div className="text-sm text-slate-600">Tạo ngày lễ để gắn công đức</div>
-          </div>
-          <div className="flex gap-2">
-            <Link className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800" href="/admin/ngay-le/them">
-              Thêm ngày lễ
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Ngày lễ công đức"
+        description="Tạo ngày lễ để gắn công đức"
+        crumbs={[{ label: "Quản trị", href: "/admin/cong-duc" }, { label: "Ngày lễ" }]}
+        actions={
+          <ButtonLink href="/admin/ngay-le/them">
+            <IconPlus /> Thêm ngày lễ
+          </ButtonLink>
+        }
+      />
 
       <FestivalAdminTable
         initial={festivals.map((f: (typeof festivals)[number]) => ({
@@ -40,4 +38,3 @@ export default async function AdminFestivalsPage() {
     </div>
   );
 }
-

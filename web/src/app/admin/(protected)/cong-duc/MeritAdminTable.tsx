@@ -3,6 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatVnd } from "@/lib/format";
+import {
+  Alert,
+  Badge,
+  Button,
+  tableClass,
+  tableWrapClass,
+  tbodyClass,
+  tdClass,
+  thClass,
+  theadClass,
+} from "@/components/admin/ui";
 
 type MeritRow = {
   id: number;
@@ -120,108 +131,115 @@ export default function MeritAdminTable({ initial, canEdit }: { initial: MeritRo
     router.refresh();
   }
 
+  const editInput = "h-9 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 outline-none focus:border-brand-300 focus:ring-3 focus:ring-brand-500/15 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90";
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-slate-600">
-          Tổng (theo danh sách đang hiển thị): <span className="font-semibold text-slate-900">{formatVnd(total)}</span>
+      {error ? <Alert>{error}</Alert> : null}
+
+      <div className={tableWrapClass}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4 dark:border-gray-800">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Tổng (theo danh sách đang hiển thị):{" "}
+            <span className="font-semibold text-gray-800 dark:text-white/90">{formatVnd(total)}</span>
+          </div>
+          {!canEdit ? <Badge color="gray">Tài khoản staff: chỉ xem</Badge> : null}
         </div>
-        {!canEdit ? <div className="text-xs font-semibold text-slate-500">Tài khoản staff: chỉ xem</div> : null}
-      </div>
 
-      {error ? <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
-
-      <div className="rounded-xl border bg-white">
-        <div className="overflow-x-auto">
-          <table className="min-w-[860px] w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
-            <tr>
-              <th className="px-4 py-3">Ngày lễ</th>
-              <th className="px-4 py-3">Tên</th>
-              <th className="px-4 py-3">Địa chỉ</th>
-              <th className="px-4 py-3 text-right">Số tiền</th>
-              <th className="px-4 py-3">Ghi chú</th>
-              <th className="px-4 py-3">Thời gian</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
+        <div className="custom-scrollbar overflow-x-auto">
+          <table className={`${tableClass} min-w-[900px]`}>
+            <thead className={theadClass}>
               <tr>
-                <td className="px-4 py-6 text-slate-600" colSpan={7}>
-                  Chưa có dữ liệu.
-                </td>
+                <th className={thClass}>Ngày lễ</th>
+                <th className={thClass}>Tên</th>
+                <th className={thClass}>Địa chỉ</th>
+                <th className={`${thClass} text-right`}>Số tiền</th>
+                <th className={thClass}>Ghi chú</th>
+                <th className={thClass}>Thời gian</th>
+                <th className={thClass}></th>
               </tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="border-t">
-                  <td className="px-4 py-3">
-                    <div className="font-medium">{r.festival.name}</div>
-                    <div className="text-xs text-slate-600">{r.festival.year}</div>
-                  </td>
-                  <td className="px-4 py-3 font-medium">
-                    {canEdit && editingId === r.id ? (
-                      <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full rounded-md border px-2 py-1 text-sm" />
-                    ) : (
-                      r.donorName
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {canEdit && editingId === r.id ? (
-                      <input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="w-full rounded-md border px-2 py-1 text-sm" />
-                    ) : (
-                      r.donorAddress
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right font-semibold">
-                    {canEdit && editingId === r.id ? (
-                      <input
-                        value={editAmount}
-                        onChange={(e) => setEditAmount(e.target.value)}
-                        inputMode="numeric"
-                        className="w-32 rounded-md border px-2 py-1 text-right text-sm"
-                      />
-                    ) : (
-                      formatVnd(r.amount)
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {canEdit && editingId === r.id ? (
-                      <input value={editNote} onChange={(e) => setEditNote(e.target.value)} className="w-full rounded-md border px-2 py-1 text-sm" />
-                    ) : (
-                      r.note ?? ""
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{new Date(r.createdAt).toLocaleString("vi-VN")}</td>
-                  <td className="px-4 py-3 text-right">
-                    {canEdit && editingId === r.id ? (
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => saveEdit(r.id)} disabled={saving} className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60">
-                          {saving ? "Đang lưu..." : "Lưu"}
-                        </button>
-                        <button onClick={cancelEdit} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">
-                          Huỷ
-                        </button>
-                      </div>
-                    ) : canEdit ? (
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => startEdit(r)} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50">
-                          Sửa
-                        </button>
-                        <button onClick={() => onDelete(r.id)} disabled={deleting === r.id} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-60">
-                          {deleting === r.id ? "Đang xoá..." : "Xoá"}
-                        </button>
-                      </div>
-                    ) : null}
+            </thead>
+            <tbody className={tbodyClass}>
+              {rows.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-10 text-center text-gray-500 dark:text-gray-400" colSpan={7}>
+                    Chưa có dữ liệu.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
+              ) : (
+                rows.map((r) => {
+                  const isEditing = canEdit && editingId === r.id;
+                  return (
+                    <tr key={r.id} className={isEditing ? "bg-brand-25 dark:bg-brand-500/5" : "hover:bg-gray-50/70 dark:hover:bg-white/[0.02]"}>
+                      <td className={tdClass}>
+                        <div className="font-medium text-gray-800 dark:text-white/90">{r.festival.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{r.festival.year}</div>
+                      </td>
+                      <td className={`${tdClass} font-medium text-gray-800 dark:text-white/90`}>
+                        {isEditing ? (
+                          <input value={editName} onChange={(e) => setEditName(e.target.value)} className={editInput} />
+                        ) : (
+                          r.donorName
+                        )}
+                      </td>
+                      <td className={tdClass}>
+                        {isEditing ? (
+                          <input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className={editInput} />
+                        ) : (
+                          r.donorAddress
+                        )}
+                      </td>
+                      <td className={`${tdClass} text-right font-semibold whitespace-nowrap text-brand-700 dark:text-brand-300`}>
+                        {isEditing ? (
+                          <input
+                            value={editAmount}
+                            onChange={(e) => setEditAmount(e.target.value)}
+                            inputMode="numeric"
+                            className={`${editInput} w-32 text-right`}
+                          />
+                        ) : (
+                          formatVnd(r.amount)
+                        )}
+                      </td>
+                      <td className={tdClass}>
+                        {isEditing ? (
+                          <input value={editNote} onChange={(e) => setEditNote(e.target.value)} className={editInput} />
+                        ) : (
+                          r.note ?? ""
+                        )}
+                      </td>
+                      <td className={`${tdClass} whitespace-nowrap text-gray-500 dark:text-gray-400`}>
+                        {new Date(r.createdAt).toLocaleString("vi-VN")}
+                      </td>
+                      <td className={`${tdClass} text-right`}>
+                        {isEditing ? (
+                          <div className="flex justify-end gap-2">
+                            <Button size="xs" onClick={() => saveEdit(r.id)} disabled={saving}>
+                              {saving ? "Đang lưu..." : "Lưu"}
+                            </Button>
+                            <Button size="xs" variant="outline" onClick={cancelEdit}>
+                              Huỷ
+                            </Button>
+                          </div>
+                        ) : canEdit ? (
+                          <div className="flex justify-end gap-2">
+                            <Button size="xs" variant="outline" onClick={() => startEdit(r)}>
+                              Sửa
+                            </Button>
+                            <Button size="xs" variant="danger" onClick={() => onDelete(r.id)} disabled={deleting === r.id}>
+                              {deleting === r.id ? "Đang xoá..." : "Xoá"}
+                            </Button>
+                          </div>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
           </table>
         </div>
       </div>
     </div>
   );
 }
-

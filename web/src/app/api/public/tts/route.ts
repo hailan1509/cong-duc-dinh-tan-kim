@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { cookies } from "next/headers";
+import { getAdminCookieName, verifyAdminToken } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,36 @@ const globalForCache = globalThis as unknown as {
 function cache() {
   if (!globalForCache.__cdtk_tts_cache) globalForCache.__cdtk_tts_cache = new Map();
   return globalForCache.__cdtk_tts_cache;
+}
+
+// Fixed phrases spoken by the public board (MeritBoard.tsx)
+const BOARD_PHRASES = new Set(["Xin chào. Đây là thử loa công đức.", "Đã bật loa thông báo công đức"]);
+const ANNOUNCE_WINDOW_MS = 1000 * 60 * 30;
+
+async function isLoggedIn() {
+  const token = (await cookies()).get(getAdminCookieName())?.value;
+  return (await verifyAdminToken(token)).ok;
+}
+
+/** True when `text` is the board's announcement of a merit created in the last 30 minutes. */
+async function isBoardAnnouncement(text: string) {
+  if (BOARD_PHRASES.has(text)) return true;
+  if (!text.includes("phát tâm công đức")) return false;
+
+  const digits = text.replace(/\D/g, "");
+  const recent = await prisma.merit.findMany({
+    where: { announce: true, createdAt: { gte: new Date(Date.now() - ANNOUNCE_WINDOW_MS) } },
+    select: { donorName: true, amount: true },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  return recent.some(
+    (m) =>
+      text.includes(m.donorName.trim()) &&
+      digits.includes(String(m.amount)) &&
+      // honorific + name + "phát tâm công đức" + formatted amount + "đồng" — no room for extra payload
+      text.length <= m.donorName.length + 80
+  );
 }
 
 export async function POST(req: Request) {
@@ -39,6 +71,12 @@ export async function POST(req: Request) {
   const hit = cache().get(key);
   if (hit && Date.now() - hit.at < 1000 * 60 * 60) {
     return Response.json({ url: hit.url, cached: true });
+  }
+
+  // Anonymous callers (the public board) may only synthesize what the board itself speaks;
+  // otherwise anyone could spend the FPT.AI quota with arbitrary text.
+  if (!(await isLoggedIn()) && !(await isBoardAnnouncement(text))) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const res = await fetch("https://api.fpt.ai/hmi/tts/v5", {

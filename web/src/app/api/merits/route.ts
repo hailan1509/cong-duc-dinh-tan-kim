@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { publish } from "@/lib/sseBus";
+import { isDateLocked } from "@/lib/ledger";
 
 function normalizeAddress(address: string) {
   // Replace token "tdp" (any case) with "Tổ dân phố" while preserving trailing characters.
@@ -38,6 +39,10 @@ export async function POST(req: Request) {
   if (!parsed.success) return Response.json({ error: "Invalid payload" }, { status: 400 });
 
   const { festivalId, donorName, donorAddress, amount, note, honorific, announce } = parsed.data;
+
+  if (await isDateLocked(new Date())) {
+    return Response.json({ error: "Tháng này đã khoá sổ thu chi, không thêm công đức được" }, { status: 409 });
+  }
 
   const merit = await prisma.merit.create({
     data: {

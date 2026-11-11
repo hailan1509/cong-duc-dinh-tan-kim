@@ -3,6 +3,18 @@
 import { useState } from "react";
 import { yyyyMmDd } from "@/lib/format";
 import Link from "next/link";
+import {
+  Alert,
+  Badge,
+  Button,
+  buttonClass,
+  tableClass,
+  tableWrapClass,
+  tbodyClass,
+  tdClass,
+  thClass,
+  theadClass,
+} from "@/components/admin/ui";
 
 type Row = {
   id: number;
@@ -64,83 +76,79 @@ export default function FestivalAdminTable({ initial }: { initial: Row[] }) {
 
   return (
     <div className="space-y-3">
-      {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
+      {error ? <Alert>{error}</Alert> : null}
 
-      <div className="overflow-hidden rounded-xl border bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
-            <tr>
-              <th className="px-4 py-3">Active</th>
-              <th className="px-4 py-3">Tên lễ</th>
-              <th className="px-4 py-3">Thời gian</th>
-              <th className="px-4 py-3">Năm</th>
-              <th className="px-4 py-3 text-right">Số công đức</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
+      <div className={tableWrapClass}>
+        <div className="custom-scrollbar overflow-x-auto">
+          <table className={`${tableClass} min-w-[720px]`}>
+            <thead className={theadClass}>
               <tr>
-                <td className="px-4 py-6 text-slate-600" colSpan={6}>
-                  Chưa có ngày lễ nào. Hãy tạo ngày lễ trước.
-                </td>
+                <th className={thClass}>Trạng thái</th>
+                <th className={thClass}>Tên lễ</th>
+                <th className={thClass}>Thời gian</th>
+                <th className={thClass}>Năm</th>
+                <th className={`${thClass} text-right`}>Số công đức</th>
+                <th className={thClass}></th>
               </tr>
-            ) : (
-              rows.map((r) => {
-                const disableDelete = r.meritCount > 0;
-                return (
-                  <tr key={r.id} className="border-t">
-                    <td className="px-4 py-3">
-                      {r.active ? (
-                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
-                          ACTIVE
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => onSetActive(r.id)}
-                          disabled={activating === r.id}
-                          className="rounded-lg border px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-60"
-                        >
-                          {activating === r.id ? "..." : "Set active"}
-                        </button>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-medium">{r.name}</td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {yyyyMmDd(new Date(r.startDate))} → {yyyyMmDd(new Date(r.endDate))}
-                    </td>
-                    <td className="px-4 py-3">{r.year}</td>
-                    <td className="px-4 py-3 text-right font-semibold">{r.meritCount}</td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link
-                          href={`/admin/ngay-le/${r.id}/sua`}
-                          className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50"
-                        >
-                          Sửa
-                        </Link>
-                        <button
-                          onClick={() => onDelete(r.id)}
-                          disabled={disableDelete || deleting === r.id}
-                          title={disableDelete ? "Không thể xoá vì đã có công đức" : "Xoá ngày lễ"}
-                          className="rounded-lg border px-3 py-1.5 text-xs hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {deleting === r.id ? "Đang xoá..." : "Xoá"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className={tbodyClass}>
+              {rows.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-10 text-center text-gray-500 dark:text-gray-400" colSpan={6}>
+                    Chưa có ngày lễ nào. Hãy tạo ngày lễ trước.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((r) => {
+                  const disableDelete = r.meritCount > 0;
+                  return (
+                    <tr key={r.id} className="hover:bg-gray-50/70 dark:hover:bg-white/[0.02]">
+                      <td className={tdClass}>
+                        {r.active ? (
+                          <Badge color="success">
+                            <span className="size-1.5 rounded-full bg-current" /> Đang active
+                          </Badge>
+                        ) : (
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            onClick={() => onSetActive(r.id)}
+                            disabled={activating === r.id}
+                          >
+                            {activating === r.id ? "..." : "Đặt active"}
+                          </Button>
+                        )}
+                      </td>
+                      <td className={`${tdClass} font-medium text-gray-800 dark:text-white/90`}>{r.name}</td>
+                      <td className={`${tdClass} whitespace-nowrap`}>
+                        {yyyyMmDd(new Date(r.startDate))} → {yyyyMmDd(new Date(r.endDate))}
+                      </td>
+                      <td className={tdClass}>{r.year}</td>
+                      <td className={`${tdClass} text-right font-semibold text-gray-800 dark:text-white/90`}>{r.meritCount}</td>
+                      <td className={`${tdClass} text-right`}>
+                        <div className="flex justify-end gap-2">
+                          <Link href={`/admin/ngay-le/${r.id}/sua`} className={buttonClass("outline", "xs")}>
+                            Sửa
+                          </Link>
+                          <Button
+                            size="xs"
+                            variant="danger"
+                            onClick={() => onDelete(r.id)}
+                            disabled={disableDelete || deleting === r.id}
+                            title={disableDelete ? "Không thể xoá vì đã có công đức" : "Xoá ngày lễ"}
+                          >
+                            {deleting === r.id ? "Đang xoá..." : "Xoá"}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 }
-

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { prisma } from "@/lib/db";
-import { createAdminToken, getAdminCookieName } from "@/lib/adminSession";
+import { createAdminToken, getAdminCookieName, secureCookieAttr } from "@/lib/adminSession";
 import bcrypt from "bcryptjs";
 
 const LoginSchema = z.object({
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const res = Response.json({ ok: true });
   res.headers.append(
     "Set-Cookie",
-    `${getAdminCookieName()}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax`
+    `${getAdminCookieName()}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax${secureCookieAttr(req)}`
   );
   return res;
 }

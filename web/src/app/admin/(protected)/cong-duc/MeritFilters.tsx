@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { buttonClass, Card, Field, Input, Select } from "@/components/admin/ui";
 
 type Festival = { id: number; name: string; year: number };
 
@@ -52,66 +53,45 @@ export default function MeritFilters(props: {
   };
 
   return (
-    <div className="rounded-xl border bg-white/80 p-4">
-      <div className="text-sm font-semibold">Bộ lọc</div>
-      <form ref={formRef} className="mt-3 grid gap-3 md:grid-cols-5" onSubmit={(e) => e.preventDefault()}>
-        <label className="block md:col-span-2">
-          <div className="text-xs font-medium text-slate-700">Ngày lễ</div>
-          <select
-            name="festivalId"
-            defaultValue={props.defaultFestivalId ?? ""}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-            onChange={submitNow}
-          >
+    <Card title="Bộ lọc" bodyClassName="p-5 sm:p-6">
+      <form ref={formRef} className="grid gap-4 md:grid-cols-6" onSubmit={(e) => e.preventDefault()}>
+        <Field label="Ngày lễ" className="md:col-span-2">
+          <Select name="festivalId" defaultValue={props.defaultFestivalId ?? ""} onChange={submitNow}>
             <option value="">Tất cả</option>
             {props.festivals.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name} - {f.year}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">Ngày bắt đầu</div>
-          <input
-            type="date"
-            name="startDate"
-            defaultValue={props.defaultStartDate ?? ""}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-            onChange={submitNow}
-          />
-        </label>
+        <Field label="Từ ngày">
+          <Input type="date" name="startDate" defaultValue={props.defaultStartDate ?? ""} onChange={submitNow} />
+        </Field>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">Ngày kết thúc</div>
-          <input
-            type="date"
-            name="endDate"
-            defaultValue={props.defaultEndDate ?? ""}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-            onChange={submitNow}
-          />
-        </label>
+        <Field label="Đến ngày">
+          <Input type="date" name="endDate" defaultValue={props.defaultEndDate ?? ""} onChange={submitNow} />
+        </Field>
 
-        <label className="block md:col-span-2">
-          <div className="text-xs font-medium text-slate-700">Tên người công đức (LIKE)</div>
-          <input
+        <Field label="Tên người công đức" className="md:col-span-2">
+          <Input
             name="donorName"
             defaultValue={props.defaultDonorName ?? ""}
             placeholder="Ví dụ: Nguyễn"
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
             onBlur={submitNow}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitNow();
+            }}
           />
-        </label>
+        </Field>
 
-        <div className="flex items-end gap-2 md:col-span-3">
-          <a href={clearHref} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-slate-50">
+        <div className="flex items-end md:col-span-6">
+          <a href={clearHref} className={buttonClass("outline", "sm")}>
             Xoá lọc
           </a>
         </div>
       </form>
-    </div>
+    </Card>
   );
 }
-
