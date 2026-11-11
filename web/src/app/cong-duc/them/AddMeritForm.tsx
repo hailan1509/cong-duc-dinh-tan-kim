@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { numberToVietnameseWords } from "@/lib/vnWords";
+import { Alert, Button, checkboxClass, Field, Input, Textarea } from "@/components/admin/ui";
+import { IconChevronDown } from "@/components/admin/icons";
 
 type Festival = {
   id: number;
@@ -12,75 +15,6 @@ type Festival = {
 
 function formatCurrencyVnd(amount: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
-}
-
-function numberToVietnameseWords(n: number) {
-  if (!Number.isFinite(n)) return "";
-  const num = Math.trunc(Math.abs(n));
-  if (num === 0) return "không đồng";
-
-  const ones = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
-
-  function readTens(t: number, full: boolean) {
-    const chuc = Math.trunc(t / 10);
-    const donvi = t % 10;
-    const parts: string[] = [];
-
-    if (chuc > 1) {
-      parts.push(`${ones[chuc]} mươi`);
-      if (donvi === 1) parts.push("mốt");
-      else if (donvi === 4) parts.push("tư");
-      else if (donvi === 5) parts.push("lăm");
-      else if (donvi > 0) parts.push(ones[donvi]);
-    } else if (chuc === 1) {
-      parts.push("mười");
-      if (donvi === 5) parts.push("lăm");
-      else if (donvi > 0) parts.push(ones[donvi]);
-    } else {
-      if (full && donvi > 0) parts.push("lẻ");
-      if (donvi > 0) parts.push(ones[donvi]);
-    }
-
-    return parts.join(" ");
-  }
-
-  function readHundreds(h: number, full: boolean) {
-    const tram = Math.trunc(h / 100);
-    const rest = h % 100;
-    const parts: string[] = [];
-
-    if (tram > 0 || full) {
-      parts.push(`${ones[tram]} trăm`);
-      if (rest > 0) parts.push(readTens(rest, true));
-    } else if (rest > 0) {
-      parts.push(readTens(rest, false));
-    }
-    return parts.join(" ").trim();
-  }
-
-  const units = ["", "nghìn", "triệu", "tỷ"];
-  const chunks: number[] = [];
-  let x = num;
-  while (x > 0) {
-    chunks.push(x % 1000);
-    x = Math.trunc(x / 1000);
-  }
-
-  const parts: string[] = [];
-  for (let i = chunks.length - 1; i >= 0; i--) {
-    const chunk = chunks[i];
-    if (chunk === 0) continue;
-    const full = i < chunks.length - 1; // middle chunks need full reading
-    const chunkText = readHundreds(chunk, full);
-    if (chunkText) {
-      parts.push(chunkText);
-      const unit = units[i] ?? "";
-      if (unit) parts.push(unit);
-    }
-  }
-
-  const out = parts.join(" ").replace(/\s+/g, " ").trim();
-  return `${out} đồng`;
 }
 
 export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
@@ -162,82 +96,83 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
     setSaving(false);
   }
 
+  const bigInput = "h-12 text-base";
+
   return (
-    <form onSubmit={onSubmit} className="space-y-3 md:space-y-4">
+    <form onSubmit={onSubmit} className="space-y-5">
       {/* Hidden since we only allow active festival */}
       <input type="hidden" name="festivalId" value={festivalId} readOnly />
 
-      <label className="block">
-        <div className="text-xs font-semibold text-slate-700">Tên người công đức</div>
-        <input
+      <Field label="Tên người công đức">
+        <Input
           value={donorName}
           onChange={(e) => setDonorName(titleCaseAfterSpaces(e.target.value))}
-          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-[#8b0000]/50 focus:shadow-[0_0_0_4px_rgba(255,215,0,0.20)]"
+          className={bigInput}
           required
           disabled={saving}
           placeholder="Nhập họ tên"
         />
-      </label>
-      <label className="block">
-        <div className="text-xs font-semibold text-slate-700">Số tiền (VND)</div>
-        <input
+      </Field>
+
+      <Field
+        label="Số tiền (VND)"
+        hint={
+          amount > 0 ? (
+            <>
+              <span className="font-semibold text-brand-700 dark:text-brand-300">{formatCurrencyVnd(amount)}</span>{" "}
+              <span className="text-gray-400">—</span> <span className="italic">{numberToVietnameseWords(amount)}</span>
+            </>
+          ) : (
+            <span className="italic">Tiền bằng chữ sẽ hiện ở đây</span>
+          )
+        }
+      >
+        <Input
           inputMode="numeric"
           value={amountText}
           onChange={(e) => setAmountText(normalizeAmountInput(e.target.value))}
           onBlur={() => setAmountText((v) => normalizeAmountInput(v))}
-          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-[#8b0000]/50 focus:shadow-[0_0_0_4px_rgba(255,215,0,0.20)]"
+          className={bigInput}
           required
           disabled={saving}
           placeholder="Nhập số tiền"
         />
-        <div className="mt-1 text-xs text-slate-600">
-          {amount > 0 ? (
-            <>
-              <span className="font-semibold">{formatCurrencyVnd(amount)}</span>{" "}
-              <span className="text-slate-400">—</span> <span className="italic">{numberToVietnameseWords(amount)}</span>
-            </>
-          ) : (
-            <span className="italic">Tiền bằng chữ sẽ hiện ở đây</span>
-          )}
-        </div>
-      </label>
+      </Field>
 
-      
-
-      <label className="block">
-        <div className="text-xs font-semibold text-slate-700">Địa chỉ</div>
-        <input
+      <Field label="Địa chỉ">
+        <Input
           value={donorAddress}
           onChange={(e) => setDonorAddress(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-[#8b0000]/50 focus:shadow-[0_0_0_4px_rgba(255,215,0,0.20)]"
+          className={bigInput}
           required
           disabled={saving}
           placeholder="Nhập địa chỉ"
         />
-      </label>
+      </Field>
 
-      <details className="rounded-2xl border border-slate-200 bg-white/60 p-3">
-        <summary className="cursor-pointer select-none text-sm font-extrabold text-slate-900">
+      <details className="group rounded-xl border border-gray-200 dark:border-gray-800">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-gray-800 select-none dark:text-white/90 [&::-webkit-details-marker]:hidden">
           Tuỳ chọn nâng cao
+          <IconChevronDown className="size-4 text-gray-500 transition-transform group-open:rotate-180" />
         </summary>
-        <div className="mt-3 space-y-3">
-          <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/70 p-3">
+        <div className="space-y-4 border-t border-gray-200 p-4 dark:border-gray-800">
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800">
             <input
               type="checkbox"
               checked={announce}
               onChange={(e) => setAnnounce(e.target.checked)}
-              className="h-5 w-5 accent-[#8b0000]"
+              className={checkboxClass}
               disabled={saving}
             />
             <div>
-              <div className="text-sm font-semibold text-slate-900">Phát loa</div>
-              <div className="text-xs text-slate-600">Thông báo giọng đọc khi có công đức mới</div>
+              <div className="text-sm font-medium text-gray-800 dark:text-white/90">Phát loa</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Thông báo giọng đọc khi có công đức mới</div>
             </div>
           </label>
 
-          <fieldset className="block rounded-2xl border border-slate-200 bg-white/70 p-3">
-            <legend className="text-xs font-semibold text-slate-700">Danh xưng</legend>
-            <div className="mt-2 flex flex-wrap gap-3 text-sm">
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-400">Danh xưng</legend>
+            <div className="flex flex-wrap gap-2">
               {[
                 { v: "none" as const, label: "Không" },
                 { v: "ong" as const, label: "Ông" },
@@ -245,7 +180,10 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
                 { v: "anh" as const, label: "Anh" },
                 { v: "chi" as const, label: "Chị" },
               ].map((opt) => (
-                <label key={opt.v} className="flex items-center gap-2">
+                <label
+                  key={opt.v}
+                  className="cursor-pointer rounded-lg border border-gray-300 px-3.5 py-2 text-sm text-gray-700 transition-colors has-checked:border-brand-500 has-checked:bg-brand-50 has-checked:text-brand-700 dark:border-gray-700 dark:text-gray-300 dark:has-checked:bg-brand-500/15 dark:has-checked:text-brand-300"
+                >
                   <input
                     type="radio"
                     name="honorific"
@@ -253,6 +191,7 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
                     checked={honorific === opt.v}
                     onChange={() => setHonorific(opt.v)}
                     disabled={saving}
+                    className="sr-only"
                   />
                   <span>{opt.label}</span>
                 </label>
@@ -260,71 +199,64 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
             </div>
           </fieldset>
 
-          <label className="block">
-            <div className="text-xs font-semibold text-slate-700">Ghi chú</div>
-            <textarea
+          <Field label="Ghi chú">
+            <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="mt-1 min-h-20 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#8b0000]/50 focus:shadow-[0_0_0_4px_rgba(255,215,0,0.20)]"
               disabled={saving}
               placeholder="(Không bắt buộc)"
             />
-          </label>
+          </Field>
         </div>
       </details>
 
-      {success ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-          {success}
-        </div>
-      ) : null}
-      {error ? <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+      {success ? <Alert variant="success">{success}</Alert> : null}
+      {error ? <Alert>{error}</Alert> : null}
 
-      <div className="sticky bottom-0 -mx-4 mt-2 border-t border-[#8b0000]/10 bg-white/80 p-3 backdrop-blur md:mx-0 md:rounded-2xl md:border md:border-[#8b0000]/15">
-        <button
-          disabled={!canSubmit || saving}
-          className="w-full rounded-xl bg-gradient-to-r from-[#8b0000] via-[#dc143c] to-[#b01919] px-4 py-3 text-base font-extrabold text-white shadow-[0_10px_25px_rgba(139,0,0,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+      <div className="sticky bottom-0 -mx-5 -mb-5 rounded-b-2xl sm:-mb-6 border-t border-gray-200 bg-white/90 px-5 py-3 backdrop-blur sm:-mx-6 sm:px-6 dark:border-gray-800 dark:bg-gray-900/90">
+        <Button type="submit" size="lg" disabled={!canSubmit || saving} className="w-full">
           {saving ? "Đang lưu..." : "Lưu công đức"}
-        </button>
+        </Button>
       </div>
 
       {successModal ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-[2px]"
           role="dialog"
           aria-modal="true"
           onClick={() => setSuccessModal(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border-2 border-[#8b0000]/20 bg-gradient-to-b from-[#fff7e6] to-white p-5 shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
+            className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xl dark:border-gray-800 dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-xl font-extrabold text-[#8b0000]">Lưu thành công</div>
-            <div className="mt-2 space-y-2 text-sm">
+            <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div className="text-center text-lg font-semibold text-gray-800 dark:text-white/90">Lưu thành công</div>
+            <div className="mt-4 space-y-2 rounded-xl bg-gray-50 p-4 text-sm dark:bg-white/[0.03]">
               <div>
-                <span className="text-slate-600">Tên:</span>{" "}
-                <span className="font-medium">{successModal.donorName}</span>
+                <span className="text-gray-500 dark:text-gray-400">Tên:</span>{" "}
+                <span className="font-medium text-gray-800 dark:text-white/90">{successModal.donorName}</span>
               </div>
               <div>
-                <span className="text-slate-600">Địa chỉ:</span>{" "}
-                <span className="font-medium">{successModal.donorAddress}</span>
+                <span className="text-gray-500 dark:text-gray-400">Địa chỉ:</span>{" "}
+                <span className="font-medium text-gray-800 dark:text-white/90">{successModal.donorAddress}</span>
               </div>
               <div>
-                <span className="text-slate-600">Số tiền:</span>{" "}
-                <span className="font-semibold">{formatCurrencyVnd(successModal.amount)}</span>
-                <div className="text-xs italic text-slate-600">
+                <span className="text-gray-500 dark:text-gray-400">Số tiền:</span>{" "}
+                <span className="font-semibold text-brand-700 dark:text-brand-300">{formatCurrencyVnd(successModal.amount)}</span>
+                <div className="text-xs text-gray-500 italic dark:text-gray-400">
                   {numberToVietnameseWords(successModal.amount)}
                 </div>
               </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={() => setSuccessModal(null)}
-                className="rounded-xl bg-gradient-to-r from-[#8b0000] via-[#dc143c] to-[#b01919] px-4 py-2 text-sm font-extrabold text-white shadow-[0_10px_25px_rgba(139,0,0,0.28)] hover:brightness-110"
-              >
+            <div className="mt-5">
+              <Button onClick={() => setSuccessModal(null)} className="w-full">
                 Đóng
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -332,4 +264,3 @@ export default function AddMeritForm({ festivals }: { festivals: Festival[] }) {
     </form>
   );
 }
-

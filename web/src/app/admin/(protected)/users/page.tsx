@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import UsersTable from "@/app/admin/users/table";
+import { PageHeader } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -10,15 +11,12 @@ export default async function AdminUsersPage() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border bg-white p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-lg font-semibold">Quản lý user</div>
-            <div className="text-sm text-slate-600">Tạo user, reset mật khẩu, xoá user</div>
-          </div>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Người dùng"
+        description="Tạo user, reset mật khẩu, xoá user"
+        crumbs={[{ label: "Quản trị", href: "/admin/cong-duc" }, { label: "Người dùng" }]}
+      />
 
       <UsersTable
         initial={users.map((u) => ({
@@ -31,4 +29,3 @@ export default async function AdminUsersPage() {
     </div>
   );
 }
-

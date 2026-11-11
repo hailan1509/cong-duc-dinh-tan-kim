@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { ButtonLink, PageHeader, StatCard } from "@/components/admin/ui";
+import { IconCoins, IconFile, IconHash, IconPlus } from "@/components/admin/icons";
 import { prisma } from "@/lib/db";
+import { isValidDateKey, vnStartOfDay } from "@/lib/vnDate";
 import MeritAdminTable from "./MeritAdminTable";
 import MeritFilters from "./MeritFilters";
 import { cookies } from "next/headers";
@@ -11,20 +14,15 @@ function formatCurrencyVnd(amount: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 }
 
+// Day boundaries in Vietnam time (the server/container may run in UTC)
 function parseDateStart(value: string | undefined) {
-  if (!value) return undefined;
-  const d = new Date(value);
-  if (!Number.isFinite(d.getTime())) return undefined;
-  d.setHours(0, 0, 0, 0);
-  return d;
+  if (!isValidDateKey(value)) return undefined;
+  return vnStartOfDay(value);
 }
 
 function parseDateEnd(value: string | undefined) {
-  if (!value) return undefined;
-  const d = new Date(value);
-  if (!Number.isFinite(d.getTime())) return undefined;
-  d.setHours(23, 59, 59, 999);
-  return d;
+  if (!isValidDateKey(value)) return undefined;
+  return new Date(vnStartOfDay(value).getTime() + 24 * 60 * 60 * 1000 - 1);
 }
 
 export default async function AdminMeritsPage(props: {
@@ -96,109 +94,109 @@ export default async function AdminMeritsPage(props: {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border bg-white p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-lg font-semibold">Quản trị công đức</div>
-            <div className="text-sm text-slate-600">Xem và xoá công đức</div>
-          </div>
-          <div className="flex gap-2">
-            <Link className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800" href="/cong-duc/them">
-              Thêm công đức
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <MeritFilters
-        festivals={festivals.map((f) => ({ id: f.id, name: f.name, year: f.year }))}
-        defaultFestivalId={festivalIdNum?.toString() ?? ""}
-        defaultStartDate={sp.startDate ?? ""}
-        defaultEndDate={sp.endDate ?? ""}
-        defaultDonorName={donorName}
-        pageSize={pageSize}
+    <div>
+      <PageHeader
+        title="Danh sách công đức"
+        description={canEdit ? "Xem, sửa và xoá công đức" : "Xem danh sách công đức"}
+        crumbs={[{ label: "Quản trị", href: "/admin/cong-duc" }, { label: "Công đức" }]}
+        actions={
+          <ButtonLink href="/cong-duc/them">
+            <IconPlus /> Thêm công đức
+          </ButtonLink>
+        }
       />
 
-      <div className="rounded-xl border bg-white/80 p-4 text-sm">
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard
+          icon={<IconCoins />}
+          tone="brand"
+          label="Tổng tiền (theo bộ lọc)"
+          value={<span className="text-brand-700 dark:text-brand-300">{formatCurrencyVnd(sumAmount)}</span>}
+        />
+        <StatCard icon={<IconHash />} tone="gold" label="Tổng bản ghi" value={totalCount.toLocaleString("vi-VN")} />
+        <StatCard
+          icon={<IconFile />}
+          tone="gray"
+          label="Trang"
+          value={
+            <>
+              {safePage} <span className="text-base font-medium text-gray-400">/ {totalPages}</span>
+            </>
+          }
+          sub={`Mỗi trang ${pageSize} bản ghi`}
+        />
+      </div>
+
+      <div className="space-y-6">
+        <MeritFilters
+          festivals={festivals.map((f) => ({ id: f.id, name: f.name, year: f.year }))}
+          defaultFestivalId={festivalIdNum?.toString() ?? ""}
+          defaultStartDate={sp.startDate ?? ""}
+          defaultEndDate={sp.endDate ?? ""}
+          defaultDonorName={donorName}
+          pageSize={pageSize}
+        />
+
+        <MeritAdminTable
+          canEdit={canEdit}
+          initial={merits.map((m) => ({
+            id: m.id,
+            donorName: m.donorName,
+            donorAddress: m.donorAddress,
+            amount: m.amount,
+            note: m.note,
+            createdAt: m.createdAt.toISOString(),
+            festival: { id: m.festival.id, name: m.festival.name, year: m.festival.year },
+          }))}
+        />
+
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-slate-700">
-            Tổng bản ghi: <span className="font-semibold text-slate-900">{totalCount}</span>
-          </div>
-          <div className="text-slate-700">
-            Tổng tiền (tất cả bản ghi theo bộ lọc):{" "}
-            <span className="font-extrabold text-[#8b0000]">{formatCurrencyVnd(sumAmount)}</span>
-          </div>
-          <div className="text-slate-700">
-            Trang: <span className="font-semibold text-slate-900">{safePage}</span> / {totalPages} (mỗi trang{" "}
-            <span className="font-semibold text-slate-900">{pageSize}</span>)
-          </div>
-        </div>
-      </div>
-
-      <MeritAdminTable
-        canEdit={canEdit}
-        initial={merits.map((m) => ({
-          id: m.id,
-          donorName: m.donorName,
-          donorAddress: m.donorAddress,
-          amount: m.amount,
-          note: m.note,
-          createdAt: m.createdAt.toISOString(),
-          festival: { id: m.festival.id, name: m.festival.name, year: m.festival.year },
-        }))}
-      />
-
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white/80 p-4 text-sm">
-        <div className="flex items-center gap-2">
-          <Link
-            className={`rounded-lg border bg-white px-3 py-2 hover:bg-slate-50 ${safePage <= 1 ? "pointer-events-none opacity-50" : ""}`}
-            href={buildPageHref(Math.max(1, safePage - 1))}
-          >
-            ← Trước
-          </Link>
-          <Link
-            className={`rounded-lg border bg-white px-3 py-2 hover:bg-slate-50 ${safePage >= totalPages ? "pointer-events-none opacity-50" : ""}`}
-            href={buildPageHref(Math.min(totalPages, safePage + 1))}
-          >
-            Sau →
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {Array.from({ length: totalPages }).slice(0, 7).map((_, idx) => {
-            const p = idx + 1;
-            const active = p === safePage;
-            return (
-              <Link
-                key={p}
-                href={buildPageHref(p)}
-                className={
-                  active
-                    ? "rounded-lg bg-slate-900 px-3 py-2 font-semibold text-white"
-                    : "rounded-lg border bg-white px-3 py-2 hover:bg-slate-50"
-                }
-              >
-                {p}
-              </Link>
-            );
-          })}
-          {totalPages > 7 ? <span className="px-2 text-slate-500">…</span> : null}
-          {totalPages > 7 ? (
+          <div className="flex items-center gap-2">
             <Link
-              href={buildPageHref(totalPages)}
-              className={
-                safePage === totalPages
-                  ? "rounded-lg bg-slate-900 px-3 py-2 font-semibold text-white"
-                  : "rounded-lg border bg-white px-3 py-2 hover:bg-slate-50"
-              }
+              className={pagerClass(false, safePage <= 1)}
+              href={buildPageHref(Math.max(1, safePage - 1))}
+              aria-disabled={safePage <= 1}
             >
-              {totalPages}
+              ← Trước
             </Link>
-          ) : null}
+            <Link
+              className={pagerClass(false, safePage >= totalPages)}
+              href={buildPageHref(Math.min(totalPages, safePage + 1))}
+              aria-disabled={safePage >= totalPages}
+            >
+              Sau →
+            </Link>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            {Array.from({ length: totalPages }).slice(0, 7).map((_, idx) => {
+              const p = idx + 1;
+              return (
+                <Link key={p} href={buildPageHref(p)} className={pagerClass(p === safePage, false, true)}>
+                  {p}
+                </Link>
+              );
+            })}
+            {totalPages > 7 ? <span className="px-2 text-gray-400">…</span> : null}
+            {totalPages > 7 ? (
+              <Link href={buildPageHref(totalPages)} className={pagerClass(safePage === totalPages, false, true)}>
+                {totalPages}
+              </Link>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+function pagerClass(active: boolean, disabled: boolean, square = false) {
+  return [
+    "inline-flex h-10 items-center justify-center rounded-lg border text-sm font-medium transition-colors",
+    square ? "min-w-10 px-3" : "px-4",
+    active
+      ? "border-brand-600 bg-brand-600 text-white"
+      : "border-gray-300 bg-white text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5",
+    disabled ? "pointer-events-none opacity-50" : "",
+  ].join(" ");
+}

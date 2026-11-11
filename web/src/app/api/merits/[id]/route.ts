@@ -2,6 +2,13 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { getAdminCookieName, verifyAdminToken } from "@/lib/adminSession";
+import { isDateLocked } from "@/lib/ledger";
+
+async function lockedMerit(meritId: number) {
+  const m = await prisma.merit.findUnique({ where: { id: meritId }, select: { createdAt: true } });
+  return !!m && (await isDateLocked(m.createdAt));
+}
+const LOCKED = { error: "Công đức thuộc tháng đã khoá sổ thu chi" };
 
 function normalizeAddress(address: string) {
   // Replace token "tdp" (any case) with "Tổ dân phố" while preserving trailing characters.
@@ -20,6 +27,7 @@ export async function DELETE(_: Request, ctx: { params: Promise<{ id: string }> 
   const { id } = await ctx.params;
   const meritId = Number(id);
   if (!Number.isFinite(meritId)) return Response.json({ error: "Invalid id" }, { status: 400 });
+  if (await lockedMerit(meritId)) return Response.json(LOCKED, { status: 409 });
 
   await prisma.merit.delete({ where: { id: meritId } });
   return Response.json({ ok: true });
@@ -38,6 +46,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   const { id } = await ctx.params;
   const meritId = Number(id);
   if (!Number.isFinite(meritId)) return Response.json({ error: "Invalid id" }, { status: 400 });
+  if (await lockedMerit(meritId)) return Response.json(LOCKED, { status: 409 });
 
   const body = await req.json().catch(() => null);
   const parsed = MeritUpdateSchema.safeParse(body);

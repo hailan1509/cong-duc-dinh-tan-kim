@@ -48,6 +48,12 @@ model AppSetting {
   fptSpeed  Int    @default(0) @map("fpt_speed")
   fptFormat String @default("mp3") @map("fpt_format")
 
+  // Sổ thu chi
+  ledgerOpeningBalance Int       @default(0) @map("ledger_opening_balance")
+  // Ngày bắt đầu dùng sổ: công đức/phiếu trước ngày này không tính vào tồn quỹ
+  ledgerStartDate      DateTime? @map("ledger_start_date")
+  ledgerPublic         Boolean   @default(true) @map("ledger_public")
+
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
@@ -62,6 +68,7 @@ model Festival {
   active    Boolean  @default(false)
 
   merits    Merit[]
+  ledgerEntries LedgerEntry[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -89,3 +96,103 @@ model Merit {
   @@map("merits")
 }
 
+
+// ---------------------------------------------------------------------------
+// Sổ thu chi (tất cả bằng tiền mặt). Công đức ghi danh (bảng merits) được tính
+// là khoản THU trực tiếp trong báo cáo — không nhân bản sang bảng ledger_entries.
+// ---------------------------------------------------------------------------
+
+enum LedgerType {
+  thu
+  chi
+}
+
+model LedgerCategory {
+  id        Int        @id @default(autoincrement())
+  type      LedgerType
+  name      String
+  sortOrder Int        @default(0) @map("sort_order")
+  active    Boolean    @default(true)
+  // Danh mục hệ thống (vd. "hom_cong_duc") — không xoá được
+  systemKey String?    @unique @map("system_key")
+
+  entries LedgerEntry[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([type, sortOrder])
+  @@map("ledger_categories")
+}
+
+model LedgerEntry {
+  id         Int        @id @default(autoincrement())
+  // Số phiếu: PT-2026-0001 / PC-2026-0001 (đánh số theo năm của ngày phát sinh)
+  code       String     @unique
+  type       LedgerType
+  // Ngày phát sinh (giờ địa phương, lưu 12:00 để tránh lệch ngày theo múi giờ)
+  date       DateTime
+  amount     Int
+  categoryId Int        @map("category_id")
+  category   LedgerCategory @relation(fields: [categoryId], references: [id])
+  festivalId Int?       @map("festival_id")
+  festival   Festival?  @relation(fields: [festivalId], references: [id], onDelete: SetNull)
+  // Người nộp (thu) / người nhận (chi)
+  party       String?
+  description String    @db.Text
+  createdById Int?      @map("created_by_id")
+
+  boxCount DonationBoxCount?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([date])
+  @@index([type, date])
+  @@map("ledger_entries")
+}
+
+// Biên bản kiểm đếm hòm công đức (Điều 9 TT 04/2023/TT-BTC) — sinh 1 phiếu thu
+model DonationBoxCount {
+  id        Int      @id @default(autoincrement())
+  entryId   Int      @unique @map("entry_id")
+  entry     LedgerEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  countedAt DateTime @map("counted_at")
+  location  String
+  // [{ "value": 500000, "count": 3 }, ...]
+  denominations Json
+  total        Int
+  participants String @db.Text
+  note         String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([countedAt])
+  @@map("donation_box_counts")
+}
+
+// Khoá sổ theo tháng: tháng đã khoá thì không thêm/sửa/xoá phiếu và công đức thuộc tháng đó
+model LedgerPeriodLock {
+  id       Int      @id @default(autoincrement())
+  year     Int
+  month    Int
+  lockedAt DateTime @default(now()) @map("locked_at")
+  lockedById Int?   @map("locked_by_id")
+
+  @@unique([year, month])
+  @@map("ledger_period_locks")
+}
+
+// Nhật ký thao tác trên sổ thu chi
+model LedgerAuditLog {
+  id       Int      @id @default(autoincrement())
+  userId   Int?     @map("user_id")
+  action   String
+  entity   String
+  entityId Int?     @map("entity_id")
+  data     Json?
+  at       DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@map("ledger_audit_logs")
+}

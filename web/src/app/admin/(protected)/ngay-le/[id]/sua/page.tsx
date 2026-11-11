@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ButtonLink, Card, PageHeader } from "@/components/admin/ui";
 import { prisma } from "@/lib/db";
 import FestivalForm from "@/app/admin/ngay-le/FestivalForm";
 import { yyyyMmDd } from "@/lib/format";
@@ -10,38 +10,35 @@ export default async function EditFestivalPage(props: { params: Promise<{ id: st
   const festivalId = Number(id);
   if (!Number.isFinite(festivalId)) {
     return (
-      <div className="rounded-xl border bg-white p-4">
-        <div className="text-sm text-slate-700">ID không hợp lệ.</div>
-      </div>
+      <Card>
+        <div className="text-sm text-gray-600 dark:text-gray-400">ID không hợp lệ.</div>
+      </Card>
     );
   }
 
   const festival = await prisma.festival.findUnique({ where: { id: festivalId } });
   if (!festival) {
     return (
-      <div className="rounded-xl border bg-white p-4">
-        <div className="text-sm text-slate-700">Không tìm thấy ngày lễ.</div>
-      </div>
+      <Card>
+        <div className="text-sm text-gray-600 dark:text-gray-400">Không tìm thấy ngày lễ.</div>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border bg-white p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-lg font-semibold">Sửa ngày lễ công đức</div>
-            <div className="text-sm text-slate-600">
-              {festival.name} ({yyyyMmDd(festival.startDate)} → {yyyyMmDd(festival.endDate)}) - {festival.year}
-            </div>
-          </div>
-          <Link className="rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50" href="/admin/ngay-le">
+    <div>
+      <PageHeader
+        title="Sửa ngày lễ công đức"
+        description={`${festival.name} (${yyyyMmDd(festival.startDate)} → ${yyyyMmDd(festival.endDate)}) - ${festival.year}`}
+        crumbs={[{ label: "Ngày lễ", href: "/admin/ngay-le" }, { label: "Sửa" }]}
+        actions={
+          <ButtonLink href="/admin/ngay-le" variant="outline">
             Quay lại
-          </Link>
-        </div>
-      </div>
+          </ButtonLink>
+        }
+      />
 
-      <div className="rounded-xl border bg-white p-4">
+      <Card className="max-w-3xl">
         <FestivalForm
           mode="edit"
           id={festival.id}
@@ -53,8 +50,7 @@ export default async function EditFestivalPage(props: { params: Promise<{ id: st
             active: festival.active,
           }}
         />
-      </div>
+      </Card>
     </div>
   );
 }
-

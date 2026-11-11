@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { Alert, Button, checkboxClass, Field, Input } from "@/components/admin/ui";
 
 type Props =
   | { mode: "create" }
@@ -54,77 +55,54 @@ export default function FestivalForm(props: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="block md:col-span-2">
-          <div className="text-xs font-medium text-slate-700">Tên lễ</div>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-            required
-          />
-        </label>
+    <form onSubmit={onSubmit} className="space-y-5">
+      <div className="grid gap-5 md:grid-cols-2">
+        <Field label="Tên lễ" className="md:col-span-2">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ví dụ: Lễ hội đình Tân Kim" required />
+        </Field>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">Ngày bắt đầu</div>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-            required
-          />
-        </label>
+        <Field label="Ngày bắt đầu">
+          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+        </Field>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">Ngày kết thúc</div>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-            required
-          />
-        </label>
+        <Field label="Ngày kết thúc">
+          <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+        </Field>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">Năm</div>
-          <input
+        <Field label="Năm">
+          <Input
             type="number"
             min={1900}
             max={3000}
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
             required
           />
-        </label>
+        </Field>
 
-        <label className="flex items-center gap-2 md:col-span-2">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 p-4 md:col-span-2 dark:border-gray-800">
           <input
             type="checkbox"
             checked={active}
             onChange={(e) => setActive(e.target.checked)}
-            className="h-4 w-4"
+            className={checkboxClass}
           />
-          <span className="text-sm font-medium text-slate-800">Đặt làm ngày lễ đang active</span>
+          <span>
+            <span className="block text-sm font-medium text-gray-800 dark:text-white/90">Đặt làm ngày lễ đang active</span>
+            <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
+              Bảng vàng và form thêm công đức sẽ dùng ngày lễ này.
+            </span>
+          </span>
         </label>
       </div>
 
-      {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
+      {error ? <Alert>{error}</Alert> : null}
 
-      <button
-        disabled={saving || !canSubmit}
-        className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-      >
-        {saving ? "Đang lưu..." : props.mode === "edit" ? "Lưu thay đổi" : "Tạo ngày lễ"}
-      </button>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={saving || !canSubmit}>
+          {saving ? "Đang lưu..." : props.mode === "edit" ? "Lưu thay đổi" : "Tạo ngày lễ"}
+        </Button>
+      </div>
     </form>
   );
 }
-

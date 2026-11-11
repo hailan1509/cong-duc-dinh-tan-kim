@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Alert, Button, Field, Input, Select } from "@/components/admin/ui";
+import { IconSpeaker } from "@/components/admin/icons";
 
 type Initial = {
   ttsEnabled: boolean;
@@ -74,103 +76,68 @@ export default function TtsSettingsForm({ initial }: { initial: Initial }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={ttsEnabled}
-            onChange={(e) => setTtsEnabled(e.target.checked)}
-            className="h-4 w-4"
-          />
-          <span className="text-sm font-semibold">Bật giọng đọc</span>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <label className="flex cursor-pointer items-center gap-3">
+          <span className="relative inline-flex">
+            <input
+              type="checkbox"
+              checked={ttsEnabled}
+              onChange={(e) => setTtsEnabled(e.target.checked)}
+              className="peer sr-only"
+            />
+            <span className="h-6 w-11 rounded-full bg-gray-200 transition-colors peer-checked:bg-brand-600 peer-focus-visible:ring-3 peer-focus-visible:ring-brand-500/25 dark:bg-gray-700" />
+            <span className="absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-theme-sm transition-transform peer-checked:translate-x-5" />
+          </span>
+          <span className="text-sm font-medium text-gray-800 dark:text-white/90">Bật giọng đọc</span>
         </label>
         <div className="flex gap-2">
-          <button
-            onClick={test}
-            className="rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50"
-            type="button"
-          >
-            Thử giọng
-          </button>
-          <button
-            onClick={save}
-            disabled={saving}
-            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
-            type="button"
-          >
+          <Button variant="outline" onClick={test}>
+            <IconSpeaker /> Thử giọng
+          </Button>
+          <Button onClick={save} disabled={saving}>
             {saving ? "Đang lưu..." : "Lưu"}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {ok ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-          {ok}
-        </div>
-      ) : null}
-      {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
-      ) : null}
+      {ok ? <Alert variant="success">{ok}</Alert> : null}
+      {error ? <Alert>{error}</Alert> : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">Provider</div>
-          <select
-            value={ttsProvider}
-            onChange={(e) => setTtsProvider(e.target.value as Initial["ttsProvider"])}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-          >
+      <div className="grid gap-5 md:grid-cols-2">
+        <Field label="Provider">
+          <Select value={ttsProvider} onChange={(e) => setTtsProvider(e.target.value as Initial["ttsProvider"])}>
             <option value="fpt">FPT.AI</option>
             <option value="webspeech">Web Speech (trình duyệt)</option>
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <div className="rounded-lg border bg-slate-50 p-3 text-xs text-slate-700">
+        <Alert variant="info" className="self-end">
           API key FPT.AI không lưu trong DB. Bạn đặt ở ENV:{" "}
-          <span className="font-mono">FPT_AI_TTS_API_KEY</span>
-        </div>
+          <span className="font-mono text-xs">FPT_AI_TTS_API_KEY</span>
+        </Alert>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">FPT voice</div>
-          <select
-            value={fptVoice}
-            onChange={(e) => setFptVoice(e.target.value)}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-          >
+        <Field label="FPT voice">
+          <Select value={fptVoice} onChange={(e) => setFptVoice(e.target.value)}>
             {FPT_VOICES.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.label}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">FPT speed (-3..+3)</div>
-          <input
-            type="number"
-            min={-3}
-            max={3}
-            value={fptSpeed}
-            onChange={(e) => setFptSpeed(Number(e.target.value))}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-          />
-        </label>
+        <Field label="FPT speed (-3..+3)">
+          <Input type="number" min={-3} max={3} value={fptSpeed} onChange={(e) => setFptSpeed(Number(e.target.value))} />
+        </Field>
 
-        <label className="block">
-          <div className="text-xs font-medium text-slate-700">FPT format</div>
-          <select
-            value={fptFormat}
-            onChange={(e) => setFptFormat(e.target.value as Initial["fptFormat"])}
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
-          >
+        <Field label="FPT format">
+          <Select value={fptFormat} onChange={(e) => setFptFormat(e.target.value as Initial["fptFormat"])}>
             <option value="mp3">mp3</option>
             <option value="wav">wav</option>
-          </select>
-        </label>
+          </Select>
+        </Field>
       </div>
     </div>
   );
 }
-

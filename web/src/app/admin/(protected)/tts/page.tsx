@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import TtsSettingsForm from "@/app/admin/tts/settingsForm";
+import { Card, PageHeader } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -9,17 +10,14 @@ export default async function AdminTtsPage() {
     (await prisma.appSetting.create({ data: { id: 1 } }));
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border bg-white p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="text-lg font-semibold">Cấu hình giọng đọc (TTS)</div>
-            <div className="text-sm text-slate-600">Dùng cho trang chủ khi có công đức mới (SSE)</div>
-          </div>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Cấu hình giọng đọc (TTS)"
+        description="Dùng cho trang chủ khi có công đức mới (SSE)"
+        crumbs={[{ label: "Quản trị", href: "/admin/cong-duc" }, { label: "Giọng đọc" }]}
+      />
 
-      <div className="rounded-xl border bg-white p-4">
+      <Card className="max-w-4xl">
         <TtsSettingsForm
           initial={{
             ttsEnabled: setting.ttsEnabled,
@@ -29,8 +27,7 @@ export default async function AdminTtsPage() {
             fptFormat: setting.fptFormat === "wav" ? "wav" : "mp3",
           }}
         />
-      </div>
+      </Card>
     </div>
   );
 }
-
